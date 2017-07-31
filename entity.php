@@ -449,6 +449,27 @@ class dao
         return $entities;
     }/*}}}*/
 
+    public function find_all()
+    {/*{{{*/
+        return $this->find_all_by_sql('select * from `'.$this->table_name.'` order by id', []);
+    }/*}}}*/
+
+    public function find_all_by_column(array $columns = [])
+    {/*{{{*/
+        if ($columns) {
+            $where = '';
+            foreach ($columns as $column => $value) {
+                $bind = ":$column";
+                $where .= " $column = $bind";
+                $binds[$bind] = $value;
+            }
+
+            return $this->find_all_by_sql('select * from `'.$this->table_name."`$where order by id", $binds);
+        } else {
+            return $this->find_all();
+        }
+    }/*}}}*/
+
     public function find_all_by_foreign_key(string $foreign_key, $value)
     {/*{{{*/
         $sql_template = "select * from `$this->table_name` where $foreign_key = :foreign_key";

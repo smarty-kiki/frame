@@ -1,10 +1,14 @@
 <?php
 
-function _mysql_connection($host, $port, $database, $username, $password, $charset, $collation, $options = [])
+function _mysql_connection($host, $port_or_sock, $database, $username, $password, $charset, $collation, $options = [])
 {/*{{{*/
     static $container = [];
 
-    $dsn = "mysql:host={$host};dbname={$database};port={$port}";
+    if (is_numeric($port_or_sock)) {
+        $dsn = "mysql:host={$host};port={$port_or_sock};dbname={$database}";
+    } else {
+        $dsn = "mysql:unix_socket={$port_or_sock};dbname={$database}";
+    }
 
     $identifier = $dsn.'|'.$username.'|'.$password;
 
@@ -65,6 +69,11 @@ function _mysql_sql_binds($sql_template, array $binds)
     }
 
     return [$sql_template, $res_binds];
+}/*}}}*/
+
+function db_name($config_key = 'default')
+{/*{{{*/
+
 }/*}}}*/
 
 function db_force_type_write($bool = null)
