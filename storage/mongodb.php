@@ -142,7 +142,6 @@ function storage_update($table, array $queries = [], array $new_data, $config_ke
         $queries,
         $new_data,
         [
-            'multi' => true,
             'upsert' => false
         ]
     );

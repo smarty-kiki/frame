@@ -352,7 +352,7 @@ function config($key)
  */
 function env()
 {
-    return isset($_SERVER['ENV']) ? $_SERVER['ENV'] : 'development';
+    return isset($_SERVER['ENV']) ? $_SERVER['ENV'] : 'production';
 }
 
 /**
@@ -425,6 +425,8 @@ function now($expression = null, $format = 'Y-m-d H:i:s')
 {
     if (is_null($expression)) {
         $time = time();
+    } elseif (is_int($expression)) {
+        $time = $expression;
     } else {
         $time = strtotime($expression);
     }
@@ -456,7 +458,7 @@ function date_between($date, $start, $end)
  *
  * @return string
  */
-function remote_post($url, $data = [], $timeout = 3, $retry = 3, $host = null)
+function remote_post($url, $data = [], $timeout = 3, $retry = 3, array $headers = [])
 {/*{{{*/
     $ch = curl_init();
 
@@ -469,8 +471,8 @@ function remote_post($url, $data = [], $timeout = 3, $retry = 3, $host = null)
         CURLOPT_ENCODING => 'gzip',
     ));
 
-    if ($host) {
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array('host:'.$host));
+    if ($headers) {
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
     }
 
     while ($retry-- > 0) {
@@ -502,7 +504,7 @@ function remote_post($url, $data = [], $timeout = 3, $retry = 3, $host = null)
  *
  * @return string
  */
-function remote_get($url, $timeout = 3, $retry = 3, $host = null)
+function remote_get($url, $timeout = 3, $retry = 3, array $headers = [], array $cookies = [])
 {/*{{{*/
     $ch = curl_init();
 
@@ -513,8 +515,12 @@ function remote_get($url, $timeout = 3, $retry = 3, $host = null)
         CURLOPT_ENCODING => 'gzip',
     ));
 
-    if ($host) {
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array('host:'.$host));
+    if ($headers) {
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+    }
+
+    if ($cookies) {
+        curl_setopt ($ch, CURLOPT_COOKIE, http_build_query($cookies, '', ';').';');
     }
 
     while ($retry-- > 0) {
@@ -535,6 +541,11 @@ function remote_get($url, $timeout = 3, $retry = 3, $host = null)
     }
 
     return $res;
+}/*}}}*/
+
+function remote_get_json($url, $timeout = 3, $retry = 3, array $headers = [])
+{/*{{{*/
+    return json_decode(remote_get($url, $timeout, $retry, $headers), true);
 }/*}}}*/
 
 function instance($class_name)

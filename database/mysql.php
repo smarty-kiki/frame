@@ -232,3 +232,93 @@ function db_transaction(closure $action, $config_key = 'default')
         }
     });
 }/*}}}*/
+
+function _db_simple_where_sql(array $wheres)
+{/*{{{*/
+    if (empty($wheres)) {
+        return ['1 = 1', []];
+    }
+
+    $where_sqls = $binds = [];
+
+    foreach ($wheres as $column => $value) {
+        if (is_array($value)) {
+            $where_sqls[] = "$column in :w_$column";
+        } else {
+            $column_info = explode(' ', $column);
+            $column = $column_info[0];
+            $symbol = isset($column_info[1])? $column_info[1]: '=';
+            $where_sqls[] = "$column $symbol :w_$column";
+        }
+        $binds[":w_$column"] = $value;
+    }
+
+    return [implode(' and ', $where_sqls), $binds];
+}/*}}}*/
+
+function db_simple_insert($table, array $data, $config_key = 'default')
+{/*{{{*/
+    $columns = $values = $binds = [];
+
+    foreach ($data as $column => $value) {
+        $columns[] = $column;
+        $values[] = ":$column";
+        $binds[":$column"] = $value;
+    }
+
+    $sql_template = 'insert into `'.$table.'` (`'.implode('`, `', $columns).'`) values ('.implode(', ', $values).')';
+
+    return db_insert($sql_template, $binds, $config_key);
+}/*}}}*/
+
+function db_simple_multi_insert($table, array $datas, $config_key = 'default')
+{/*{{{*/
+    $data_sql_templates = $columns = $binds = [];
+
+    foreach ($datas as $k => $data) {
+
+        $values = [];
+
+        foreach ($data as $column => $value) {
+            $columns[$column] = true;
+            $values[] = ":i_$column$k";
+            $binds[":i_$column$k"] = $value;
+        }
+
+        $data_sql_templates[] = '('.implode(', ', $values).')';
+    }
+
+    $sql_template = 'insert into `'.$table.'` (`'.implode('`, `', array_keys($columns)).'`) values '.implode(', ', $data_sql_templates);
+
+    return db_insert($sql_template, $binds, $config_key);
+}/*}}}*/
+
+function db_simple_update($table, array $wheres, array $data, $config_key = 'default')
+{/*{{{*/
+    list($where, $binds) = _db_simple_where_sql($wheres);
+
+    $update = [];
+
+    foreach ($data as $column => $value) {
+        $update[] = "$column = :u_$column";
+        $binds[":u_$column"] = $value;
+    }
+
+    $sql_template = 'update `'.$table.'` set '.implode(', ', $update).' where '.$where;
+
+    return db_update($sql_template, $binds, $config_key);
+}/*}}}*/
+
+function db_simple_query($table, array $wheres, $option_sql = 'order by id', $config_key = 'default')
+{/*{{{*/
+    list($where, $binds) = _db_simple_where_sql($wheres);
+
+    return db_query('select * from `'.$table.'` where '.$where.' '.$option_sql, $binds, $config_key);
+}/*}}}*/
+
+function db_simple_query_first($table, array $wheres, $option_sql = '', $config_key = 'default')
+{/*{{{*/
+    list($where, $binds) = _db_simple_where_sql($wheres);
+
+    return db_query_first('select * from `'.$table.'` where '.$where.' '.$option_sql, $binds, $config_key);
+}/*}}}*/

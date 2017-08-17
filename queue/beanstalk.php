@@ -397,9 +397,7 @@ function queue_watch($tube = 'default', $config_key = 'default', $memory_limit =
         $jobs = queue_jobs();
         $job = $jobs[$job_name];
 
-        $res = unit_of_work(function () use ($job, $data, $retry, $id) {
-            return call_user_func_array($job['closure'], [$data, $retry, $id]);
-        });
+        $res = call_user_func_array($job['closure'], [$data, $retry, $id]);
 
         if ($res) {
             _beanstalk_delete($fp, $id);
