@@ -71,11 +71,6 @@ function _mysql_sql_binds($sql_template, array $binds)
     return [$sql_template, $res_binds];
 }/*}}}*/
 
-function db_name($config_key = 'default')
-{/*{{{*/
-
-}/*}}}*/
-
 function db_force_type_write($bool = null)
 {/*{{{*/
     static $container = false;

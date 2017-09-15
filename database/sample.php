@@ -15,3 +15,12 @@ function db_write($sql_template, array $binds = [], $database = 'default') { }
 function db_structure($sql, $database = 'default') { }
 
 function db_transaction(closure $action, $database = 'default') { }
+
+
+function db_simple_insert($table, array $data, $config_key = 'default') { }
+function db_simple_multi_insert($table, array $datas, $config_key = 'default') {}
+
+function db_simple_update($table, array $wheres, array $data, $config_key = 'default') {}
+ 
+function db_simple_query($table, array $wheres, $option_sql = 'order by id', $config_key = 'default') {}
+function db_simple_query_first($table, array $wheres, $option_sql = '', $config_key = 'default') {}

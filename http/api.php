@@ -486,14 +486,14 @@ function if_has_exception(closure $action = null)
     return $container;
 }
 
-function api_err_action($error_type, $error_message, $error_file, $error_line, $error_context = null)
+function http_err_action($error_type, $error_message, $error_file, $error_line, $error_context = null)
 {
     $message = $error_message.' '.$error_file.' '.$error_line;
 
-    api_ex_action(new Exception($message));
+    http_ex_action(new Exception($message));
 }
 
-function api_ex_action($ex)
+function http_ex_action($ex)
 {
     $action = if_has_exception();
 
@@ -505,11 +505,11 @@ function api_ex_action($ex)
     throw $ex;
 }
 
-function api_fatel_err_action()
+function http_fatel_err_action()
 {
     $err = error_get_last();
 
     if (not_empty($err)) {
-        api_err_action($err['type'], $err['message'], $err['file'], $err['line']);
+        http_err_action($err['type'], $err['message'], $err['file'], $err['line']);
     }
 }
