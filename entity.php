@@ -27,6 +27,8 @@ abstract class entity implements JsonSerializable, Serializable
         return null;
     }
 
+    abstract public static function create();
+
     protected static function init()
     {
         $static = new static();
@@ -160,7 +162,10 @@ abstract class entity implements JsonSerializable, Serializable
         }
 
         if (array_key_exists($property, $this->relationship_refs)) {
-            return $this->relationship_refs[$property]->update($value, $this);
+
+            $this->relationship_refs[$property]->update($value, $this);
+
+            return $this->relationships[$property] = $value;
         }
 
         if (array_key_exists($property, $this->attributes)) {
@@ -457,14 +462,10 @@ class dao
     public function find_all_by_column(array $columns = [])
     {/*{{{*/
         if ($columns) {
-            $where = '';
-            foreach ($columns as $column => $value) {
-                $bind = ":$column";
-                $where .= " $column = $bind";
-                $binds[$bind] = $value;
-            }
 
-            return $this->find_all_by_sql('select * from `'.$this->table_name."`$where order by id", $binds);
+            list($where, $binds) = db_simple_where_sql($columns);
+
+            return $this->find_all_by_sql('select * from `'.$this->table_name."` where $where order by id", $binds);
         } else {
             return $this->find_all();
         }
@@ -702,7 +703,7 @@ function local_cache_flush_all()
 {
     $cached = _local_cache();
 
-    _local_cache([]);
+    local_cache_delete_all();
 
     return $cached;
 }

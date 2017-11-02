@@ -228,7 +228,7 @@ function db_transaction(closure $action, $config_key = 'default')
     });
 }/*}}}*/
 
-function _db_simple_where_sql(array $wheres)
+function db_simple_where_sql(array $wheres)
 {/*{{{*/
     if (empty($wheres)) {
         return ['1 = 1', []];
@@ -290,7 +290,7 @@ function db_simple_multi_insert($table, array $datas, $config_key = 'default')
 
 function db_simple_update($table, array $wheres, array $data, $config_key = 'default')
 {/*{{{*/
-    list($where, $binds) = _db_simple_where_sql($wheres);
+    list($where, $binds) = db_simple_where_sql($wheres);
 
     $update = [];
 
@@ -306,14 +306,14 @@ function db_simple_update($table, array $wheres, array $data, $config_key = 'def
 
 function db_simple_query($table, array $wheres, $option_sql = 'order by id', $config_key = 'default')
 {/*{{{*/
-    list($where, $binds) = _db_simple_where_sql($wheres);
+    list($where, $binds) = db_simple_where_sql($wheres);
 
     return db_query('select * from `'.$table.'` where '.$where.' '.$option_sql, $binds, $config_key);
 }/*}}}*/
 
 function db_simple_query_first($table, array $wheres, $option_sql = '', $config_key = 'default')
 {/*{{{*/
-    list($where, $binds) = _db_simple_where_sql($wheres);
+    list($where, $binds) = db_simple_where_sql($wheres);
 
     return db_query_first('select * from `'.$table.'` where '.$where.' '.$option_sql, $binds, $config_key);
 }/*}}}*/
