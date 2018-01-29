@@ -22,25 +22,25 @@
 # 目录结果及文件说明
 
 frame  
-├── cache (缓存类功能文件目录)   
-│   ├── demo.php  
-│   ├── memcache.php (memcache 缓存)  
-│   └── redis.php (redis 缓存)  
+├── cache (缓存类功能文件目录)  
+│   ├── demo.php  
+│   ├── memcache.php (memcache 缓存)  
+│   └── redis.php (redis 缓存)  
 ├── database (数据库类功能文件目录)  
 │   ├── demo.php  
-│   └── mysql.php (mysql 数据库)  
+│   └── mysql.php (mysql 数据库)  
 ├── queue (队列类功能文件目录)  
 │   ├── demo.php  
-│   └── beanstalk.php (beanstalk 队列)  
-├── http (http 入口类功能文件目录)  
-│   ├── api.php (API 能力)  
-│   └── view.php (页面能力)  
-├── lock (锁类功能文件目录)  
+│   └── beanstalk.php (beanstalk 队列)  
+├── http (http 入口类功能文件目录)  
+│   ├── api.php (API 能力)  
+│   └── view.php (页面能力)  
+├── lock (锁类功能文件目录)  
 │   ├── demo.php  
-│   └── cache.php (使用缓存实现锁)  
-├── storage (非 SQL 类存储功能文件目录)  
+│   └── cache.php (使用缓存实现锁)  
+├── storage (非 SQL 类存储功能文件目录)  
 │   ├── demo.php  
-│   └── mongodb.php (mongodb 实现)  
+│   └── mongodb.php (mongodb 实现)  
 ├── command.php (命令行能力)  
 ├── entity.php (ORM 能力)  
 ├── function.php (辅助函数)  
