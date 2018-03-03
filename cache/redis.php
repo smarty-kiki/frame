@@ -152,3 +152,11 @@ function cache_decrement($key, $number = 1, $expires = 0, $config_key = 'default
         return $res;
     });
 }/*}}}*/
+
+function cache_keys($pattern = '*', $config_key = 'default')
+{/*{{{*/
+    return _redis_cache_closure($config_key, function ($redis) use ($pattern) {
+
+        return $redis->keys($pattern);
+    });
+}/*}}}*/

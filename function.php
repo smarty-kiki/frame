@@ -8,7 +8,7 @@
  * @return mixed
  */
 function array_get($array, $key, $default = null)
-{
+{/*{{{*/
     if (is_null($key)) {
         return $default;
     }
@@ -22,7 +22,7 @@ function array_get($array, $key, $default = null)
     }
 
     return $array;
-}
+}/*}}}*/
 
 /**
  * Set an array item to a given value using "dot" notation.
@@ -35,7 +35,7 @@ function array_get($array, $key, $default = null)
  * @return array
  */
 function array_set(&$array, $key, $value)
-{
+{/*{{{*/
     if (is_null($key)) {
         return $array = $value;
     }
@@ -55,7 +55,7 @@ function array_set(&$array, $key, $value)
     $array[array_shift($keys)] = $value;
 
     return $array;
-}
+}/*}}}*/
 
 /**
  * Fetch a flattened array of a nested array element.
@@ -66,7 +66,7 @@ function array_set(&$array, $key, $value)
  * @return array
  */
 function array_fetch($array, $key)
-{
+{/*{{{*/
     foreach (explode('.', $key) as $segment) {
         $results = [];
 
@@ -80,7 +80,7 @@ function array_fetch($array, $key)
     }
 
     return array_values($results);
-}
+}/*}}}*/
 
 /**
  * Remove one or many array items from a given array using "dot" notation.
@@ -89,7 +89,7 @@ function array_fetch($array, $key)
  * @param array|string $keys
  */
 function array_forget(&$array, $keys)
-{
+{/*{{{*/
     $original = &$array;
 
     foreach ((array) $keys as $key) {
@@ -108,7 +108,7 @@ function array_forget(&$array, $keys)
         // clean up after each pass
         $array = &$original;
     }
-}
+}/*}}}*/
 
 /**
  * Divide an array into two arrays. One with keys and the other with values.
@@ -118,9 +118,9 @@ function array_forget(&$array, $keys)
  * @return array
  */
 function array_divide($array)
-{
+{/*{{{*/
     return array(array_keys($array), array_values($array));
-}
+}/*}}}*/
 
 /**
  * Build a new array using a callback.
@@ -131,7 +131,7 @@ function array_divide($array)
  * @return array
  */
 function array_build($array, Closure $callback)
-{
+{/*{{{*/
     $results = [];
 
     foreach ($array as $key => $value) {
@@ -141,7 +141,7 @@ function array_build($array, Closure $callback)
     }
 
     return $results;
-}
+}/*}}}*/
 
 /**
  * 递归ksort数组.
@@ -172,7 +172,7 @@ function array_key_sort($arr)
  * @return sort_array
  */
 function aksort(&$array, $valrev = false, $keyrev = false)
-{
+{/*{{{*/
     $sort_array = [];
     if ($valrev) {
         arsort($array);
@@ -194,7 +194,7 @@ function aksort(&$array, $valrev = false, $keyrev = false)
     }
 
     return $sort_array;
-}
+}/*}}}*/
 
 /**
  * Dump the passed variables and end the script.
@@ -202,10 +202,10 @@ function aksort(&$array, $valrev = false, $keyrev = false)
  * @param  dynamic  mixed
  */
 function dd()
-{
+{/*{{{*/
     array_map(function ($x) { var_dump($x); }, func_get_args());
     die;
-}
+}/*}}}*/
 
 /**
  * Return the default value of the given value.
@@ -215,9 +215,9 @@ function dd()
  * @return mixed
  */
 function value($value)
-{
+{/*{{{*/
     return $value instanceof Closure ? $value() : $value;
-}
+}/*}}}*/
 
 /**
  * @param mixed $value
@@ -225,11 +225,11 @@ function value($value)
  * @return mixed
  */
 function closure_name($closure)
-{
+{/*{{{*/
     $closure_ref = new ReflectionFunction($closure);
 
     return $closure_ref->getName();
-}
+}/*}}}*/
 
 /**
  * Determine if a given string starts with a given substring.
@@ -240,7 +240,7 @@ function closure_name($closure)
  * @return bool
  */
 function starts_with($haystack, $needles)
-{
+{/*{{{*/
     foreach ((array) $needles as $needle) {
         if ($needle != '' && strpos($haystack, $needle) === 0) {
             return true;
@@ -248,7 +248,7 @@ function starts_with($haystack, $needles)
     }
 
     return false;
-}
+}/*}}}*/
 
 /**
  * Determine if a given string ends with a given substring.
@@ -258,14 +258,14 @@ function starts_with($haystack, $needles)
  * @return bool
  */
 function ends_with($haystack, $needles)
-{
+{/*{{{*/
     foreach ((array) $needles as $needle)
     {
         if ((string) $needle === substr($haystack, -strlen($needle))) return true;
     }
 
     return false;
-}
+}/*}}}*/
 
 /**
  * Cap a string with a single instance of a given value.
@@ -276,11 +276,11 @@ function ends_with($haystack, $needles)
  * @return string
  */
 function str_finish($value, $cap)
-{
+{/*{{{*/
     $quoted = preg_quote($cap, '/');
 
     return preg_replace('/(?:'.$quoted.')+$/', '', $value).$cap;
-}
+}/*}}}*/
 
 /**
  * Determine if the given path is a valid URL.
@@ -290,13 +290,13 @@ function str_finish($value, $cap)
  * @return bool
  */
 function is_url($path)
-{
+{/*{{{*/
     if (starts_with($path, array('#', '//', 'mailto:', 'tel:'))) {
         return true;
     }
 
     return filter_var($path, FILTER_VALIDATE_URL) !== false;
-}
+}/*}}}*/
 
 /**
  * Init configuration from array or file.
@@ -306,7 +306,7 @@ function is_url($path)
  * @return mixed
  */
 function config_dir($dir = '')
-{
+{/*{{{*/
     static $container = null;
 
     if (is_null($container)) {
@@ -314,7 +314,7 @@ function config_dir($dir = '')
     }
 
     return $container;
-}
+}/*}}}*/
 
 /**
  * Get the specified configuration value.
@@ -325,7 +325,7 @@ function config_dir($dir = '')
  * @return mixed
  */
 function config($key)
-{
+{/*{{{*/
     static $configs = [];
 
     if (empty($configs[$key])) {
@@ -341,7 +341,7 @@ function config($key)
     }
 
     return $configs[$key];
-}
+}/*}}}*/
 
 /**
  * env.
@@ -351,9 +351,9 @@ function config($key)
  * @return string
  */
 function env()
-{
+{/*{{{*/
     return isset($_SERVER['ENV']) ? $_SERVER['ENV'] : 'production';
-}
+}/*}}}*/
 
 /**
  * is_env.
@@ -363,9 +363,9 @@ function env()
  * @return bool
  */
 function is_env($env)
-{
+{/*{{{*/
     return env() === $env;
-}
+}/*}}}*/
 
 /**
  * not empty.
@@ -375,9 +375,9 @@ function is_env($env)
  * @return mixed
  */
 function not_empty($mixed)
-{
+{/*{{{*/
     return !empty($mixed);
-}
+}/*}}}*/
 
 /**
  * all not empty.
@@ -387,14 +387,14 @@ function not_empty($mixed)
  * @return mixed
  */
 function all_not_empty()
-{
+{/*{{{*/
     foreach (func_get_args() as $arg) {
 
         if (empty($arg)) return false;
     }
 
     return true;
-}
+}/*}}}*/
 
 /**
  * has empty.
@@ -404,14 +404,14 @@ function all_not_empty()
  * @return mixed
  */
 function has_empty()
-{
+{/*{{{*/
     foreach (func_get_args() as $arg) {
 
         if (empty($arg)) return true;
     }
 
     return false;
-}
+}/*}}}*/
 
 /**
  * now.
@@ -422,7 +422,7 @@ function has_empty()
  * @return string
  */
 function now($expression = null, $format = 'Y-m-d H:i:s')
-{
+{/*{{{*/
     if (is_null($expression)) {
         $time = time();
     } elseif (is_numeric($expression)) {
@@ -432,7 +432,7 @@ function now($expression = null, $format = 'Y-m-d H:i:s')
     }
 
     return date($format, $time);
-}
+}/*}}}*/
 
 /**
  * if date between start date and end date.
@@ -444,9 +444,9 @@ function now($expression = null, $format = 'Y-m-d H:i:s')
  * @return bool
  */
 function date_between($date, $start, $end)
-{
+{/*{{{*/
     return strtotime($date) >= strtotime($start) && strtotime($date) <= strtotime($end);
-}
+}/*}}}*/
 
 /**
  * remote_post.
@@ -500,6 +500,11 @@ function remote_post($url, $data = [], $timeout = 3, $retry = 3, array $headers 
     return $res;
 }/*}}}*/
 
+function remote_post_json($url, $data = [], $timeout = 3, $retry = 3, array $headers = [], array $cookies = [])
+{/*{{{*/
+    return json_decode(remote_post($url, $data, $timeout, $retry, $headers, $cookies), true);
+}/*}}}*/
+
 /**
  * remote_get.
  *
@@ -549,9 +554,9 @@ function remote_get($url, $timeout = 3, $retry = 3, array $headers = [], array $
     return $res;
 }/*}}}*/
 
-function remote_get_json($url, $timeout = 3, $retry = 3, array $headers = [])
+function remote_get_json($url, $timeout = 3, $retry = 3, array $headers = [], array $cookies = [])
 {/*{{{*/
-    return json_decode(remote_get($url, $timeout, $retry, $headers), true);
+    return json_decode(remote_get($url, $timeout, $retry, $headers, $cookies), true);
 }/*}}}*/
 
 function instance($class_name)

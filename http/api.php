@@ -328,11 +328,16 @@ function input_json($name, $default = null)
     static $post_data = null;
 
     if (is_null($default)) {
-        $post_data = json_decode(file_get_contents('php://input'), true);
+        $post_data = json_decode(input_post_raw(), true);
     }
 
     return array_get($post_data, $name, $default);
 }
+
+function input_post_raw()
+{/*{{{*/
+    return file_get_contents('php://input');
+}/*}}}*/
 
 /**
  * Get items from Json Decode _POST using "dot" notation.

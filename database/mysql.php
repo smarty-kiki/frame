@@ -304,6 +304,15 @@ function db_simple_update($table, array $wheres, array $data, $config_key = 'def
     return db_update($sql_template, $binds, $config_key);
 }/*}}}*/
 
+function db_simple_delete($table, array $wheres, $config_key = 'default')
+{/*{{{*/
+    list($where, $binds) = db_simple_where_sql($wheres);
+
+    $sql_template = 'delete from `'.$table.'` where '.$where;
+
+    return db_delete($sql_template, $binds, $config_key);
+}/*}}}*/
+
 function db_simple_query($table, array $wheres, $option_sql = 'order by id', $config_key = 'default')
 {/*{{{*/
     list($where, $binds) = db_simple_where_sql($wheres);
