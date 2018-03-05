@@ -305,12 +305,12 @@ function is_url($path)
  *
  * @return mixed
  */
-function config_dir($dir = '')
+function config_dir($dir = null)
 {/*{{{*/
-    static $container = null;
+    static $container = [];
 
-    if (is_null($container)) {
-        $container = $dir;
+    if (! is_null($dir)) {
+        $container[] = $dir;
     }
 
     return $container;
@@ -328,15 +328,23 @@ function config($key)
 {/*{{{*/
     static $configs = [];
 
-    if (empty($configs[$key])) {
+    if (! array_key_exists($key, $configs)) {
 
-        $dir = config_dir();
+        $directories = config_dir();
 
-        $configs[$key] = include $dir.'/'.$key.'.php';
+        $configs[$key] = [];
 
-        if (is_file($env_config_file = $dir.'/'.env().'/'.$key.'.php')) {
+        foreach ($directories as $dir) {
 
-            $configs[$key] = array_replace_recursive($configs[$key], include $env_config_file);
+            if (is_file($config_file = $dir.'/'.$key.'.php')) {
+
+                $configs[$key] = array_replace_recursive($configs[$key], include $config_file);
+            }
+
+            if (is_file($env_config_file = $dir.'/'.env().'/'.$key.'.php')) {
+
+                $configs[$key] = array_replace_recursive($configs[$key], include $env_config_file);
+            }
         }
     }
 
