@@ -55,7 +55,6 @@ function service($path, $action)
     if ('/'.$path === uri_info('path')) {
 
         service_action($action);
-        exit;
     }
 }
 
@@ -68,6 +67,7 @@ function service_action($action)
         header('Content-type: text/plain');
         echo service_data_serialize($res);
         flush();
+        exit;
     } catch (Exception $ex) {
         service_ex_serialize($ex);
     }
@@ -75,7 +75,7 @@ function service_action($action)
 
 function service_args()
 {
-    $args = unserialize(file_get_contents('php://input'));
+    $args = (array) unserialize(file_get_contents('php://input'));
 
     $returns = [];
     foreach ($args as $arg) {
@@ -106,6 +106,7 @@ function service_ex_serialize($ex)
         'exception_message' => $ex->getMessage(),
     ]);
     flush();
+    exit;
 }
 
 function service_err_serialize($error_type, $error_message, $error_file, $error_line, $error_context = null)

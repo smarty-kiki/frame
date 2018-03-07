@@ -22,13 +22,6 @@ abstract class entity implements JsonSerializable, Serializable
     private $relationships = [];
     private $relationship_refs = [];
 
-    public static function get_system_code()
-    {
-        return null;
-    }
-
-    abstract public static function create();
-
     protected static function init()
     {
         $static = new static();
@@ -237,11 +230,6 @@ class null_entity extends entity
         return $null_entity;
     }
 
-    public static function get_system_code()
-    {
-        return null;
-    }
-
     public function is_null()
     {
         return true;
@@ -355,6 +343,7 @@ class dao
     /*{{{*/
     protected $class_name;
     protected $table_name;
+    protected $db_config_key;
 
     public function __construct()
     {/*{{{*/
@@ -379,7 +368,7 @@ class dao
         $entity = local_cache_get($this->class_name, $id);
 
         if (is_null($entity)) {
-            $row = db_query_first('select * from `'.$this->table_name.'` where id = ?', [$id]);
+            $row = db_query_first('select * from `'.$this->table_name.'` where id = ?', [$id], $this->db_config_key);
             if ($row) {
                 $entity = $this->row_to_entity($row);
                 local_cache_set($entity);
@@ -407,7 +396,7 @@ class dao
 
     protected function find_by_sql($sql_template, array $binds = [])
     {/*{{{*/
-        $row = db_query_first($sql_template, $binds);
+        $row = db_query_first($sql_template, $binds, $this->db_config_key);
 
         if (empty($row)) {
             return null_entity::create($this->class_name);
@@ -438,7 +427,7 @@ class dao
             ],
         ];
 
-        $rows = db_query($sql['sql_template'], $sql['binds']);
+        $rows = db_query($sql['sql_template'], $sql['binds'], $this->db_config_key);
 
         $entities = [];
 
@@ -489,7 +478,7 @@ class dao
     {/*{{{*/
         $entities = [];
 
-        $rows = db_query($sql_template, $binds);
+        $rows = db_query($sql_template, $binds, $this->db_config_key);
 
         foreach ($rows as $row) {
             $entity = local_cache_get($this->class_name, $row['id']);
@@ -534,14 +523,14 @@ class dao
     {/*{{{*/
         $sql = 'select count(*) as count from '.$this->table_name;
 
-        return db_query_value('count', $sql);
+        return db_query_value('count', $sql, [], $this->db_config_key);
     }/*}}}*/
 
     protected function count_by_condition($condition, array $binds = [])
     {/*{{{*/
         $sql = 'select count(*) as count from '.$this->table_name.' where '.$condition;
 
-        return db_query_value('count', $sql, $binds);
+        return db_query_value('count', $sql, $binds, $this->db_config_key);
     }/*}}}*/
 
     final private function get_dirty($entity)
@@ -570,6 +559,11 @@ class dao
         $entity->attributes = $entity->structs = $rows;
 
         return $entity;
+    }/*}}}*/
+
+    final public function get_db_config_key()
+    {/*{{{*/
+        return $this->db_config_key;
     }/*}}}*/
 
     final public function dump_insert_sql($entity)

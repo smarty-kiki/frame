@@ -1,19 +1,19 @@
 <?php
 
-function unit_of_work_system_code($system_code = null)
+function unit_of_work_db_config_key($config_key = null)
 {
-    static $container = null;
+    static $container = 'default';
 
-    if (!is_null($system_code)) {
-        $container = $system_code;
+    if (!is_null($config_key)) {
+        $container = $config_key;
     }
 
     return $container;
 }
 
-function _unit_of_work_write($sql_template, array $binds = [])
+function _unit_of_work_write($sql_template, array $binds = [], $config_key = 'default')
 {
-    $row_count = db_write($sql_template, $binds);
+    $row_count = db_write($sql_template, $binds, $config_key);
 
     otherwise($row_count === 1, 'data in unit of work is expired');
 }
@@ -32,12 +32,15 @@ function unit_of_work(Closure $action)
 
     $sqls = [];
 
+    $db_config_key = unit_of_work_db_config_key();
+
     foreach ($entities as $entity) {
-        if ($entity->get_system_code() !== unit_of_work_system_code()) {
-            continue;
-        }
 
         $dao = $entity->get_dao();
+
+        if ($dao->get_db_config_key() !== $db_config_key) {
+            continue;
+        }
 
         if ($entity->is_force_deleted()) {
             if (!$entity->is_new()) {
@@ -54,12 +57,12 @@ function unit_of_work(Closure $action)
         if (count($sqls) > 1) {
             db_transaction(function () use ($sqls) {
                 foreach ($sqls as $sql) {
-                    _unit_of_work_write($sql['sql_template'], $sql['binds']);
+                    _unit_of_work_write($sql['sql_template'], $sql['binds'], $db_config_key);
                 }
-            });
+            }, $db_config_key);
         } else {
             $sql = reset($sqls);
-            _unit_of_work_write($sql['sql_template'], $sql['binds']);
+            _unit_of_work_write($sql['sql_template'], $sql['binds'], $db_config_key);
         }
     }
 
