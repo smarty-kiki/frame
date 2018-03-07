@@ -85,7 +85,7 @@ function route($rule)
 function flush_action(closure $action, $args = [], closure $verify = null)
 {
     if (is_null($verify)) {
-        $output = call_user_func_array($action, $args);
+        $output = $action(...$args);
     } else {
         $output = $verify($action, $args);
     }
@@ -298,10 +298,8 @@ function input($name, $default = null)
  *
  * @return array
  */
-function input_list()
+function input_list(...$names)
 {
-    $names = func_get_args();
-
     if (empty($names)) {
         return [];
     }
@@ -345,10 +343,8 @@ function input_post_raw()
  * @access public
  * @return array
  */
-function input_json_list()
+function input_json_list(...$names)
 {
-    $names = func_get_args();
-
     if (empty($names)) {
         return [];
     }
@@ -401,10 +397,8 @@ function cookie($name, $default = null)
  *
  * @return mixed
  */
-function cookie_list()
+function cookie_list(...$names)
 {
-    $names = func_get_args();
-
     if (empty($names)) {
         return [];
     }
@@ -419,7 +413,62 @@ function cookie_list()
 }
 
 /**
- * Convert data to json
+ * Set or get view file path.
+ *
+ * @param string $path
+ * @return string
+ */
+function view_path($path = null)
+{
+    static $container = '';
+
+    if (!empty($path)) {
+        return $container = $path;
+    }
+
+    return $container;
+}
+
+/**
+ * Render view.
+ *
+ * @param string $view
+ * @param array  $args
+ */
+function render($view, $args = [])
+{
+    if (!empty($args)) {
+        extract($args);
+    }
+
+    ob_start();
+
+    include view_path().$view.'.php';
+
+    $echo = ob_get_contents();
+
+    ob_end_clean();
+
+    return $echo;
+}
+
+/**
+ * include view and send arguments.
+ *
+ * @param string $view
+ * @param array  $args
+ */
+function include_view($view, $args = [])
+{
+    if (!empty($args)) {
+        extract($args);
+    }
+
+    include view_path().$view.'.php';
+}
+
+/**
+ * Convert data to json/jsonp.
  *
  * @param array  $data
  * @param string $callback

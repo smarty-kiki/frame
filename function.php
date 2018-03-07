@@ -201,9 +201,9 @@ function aksort(&$array, $valrev = false, $keyrev = false)
  *
  * @param  dynamic  mixed
  */
-function dd()
+function dd(...$args)
 {/*{{{*/
-    array_map(function ($x) { var_dump($x); }, func_get_args());
+    var_dump(...$args);
     die;
 }/*}}}*/
 
@@ -394,9 +394,9 @@ function not_empty($mixed)
  *
  * @return mixed
  */
-function all_not_empty()
+function all_not_empty(...$args)
 {/*{{{*/
-    foreach (func_get_args() as $arg) {
+    foreach ($args as $arg) {
 
         if (empty($arg)) return false;
     }
@@ -411,9 +411,9 @@ function all_not_empty()
  *
  * @return mixed
  */
-function has_empty()
+function has_empty(...$args)
 {/*{{{*/
-    foreach (func_get_args() as $arg) {
+    foreach ($args as $arg) {
 
         if (empty($arg)) return true;
     }
