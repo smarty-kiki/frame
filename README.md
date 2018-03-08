@@ -33,8 +33,9 @@ frame
 │   ├── demo.php  
 │   └── beanstalk.php (beanstalk 队列)  
 ├── http (http 入口类功能文件目录)  
-│   ├── api.php (API 能力)  
-│   └── view.php (页面能力)  
+│   ├── application.php (web 能力)  
+│   ├── distribution_client.php (分布式服务 client 能力)  
+│   ├── distribution_service.php (分布式服务 service 能力)  
 ├── lock (锁类功能文件目录)  
 │   ├── demo.php  
 │   └── cache.php (使用缓存实现锁)  
