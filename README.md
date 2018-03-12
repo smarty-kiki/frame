@@ -52,7 +52,7 @@ frame
 # 已搭配好的架构
 
 [小API架构 api_frame](https://github.com/smarty-kiki/api_frame)  
-[小MVC架构 micro_frame](https://github.com/smarty-kiki/mvc_frame)  
+[小MVC架构 mvc_frame](https://github.com/smarty-kiki/mvc_frame)  
   
 [分布式架构应用层框架 distributed_api_frame](https://github.com/smarty-kiki/distributed_api_frame)  
 [分布式架构应用层框架 distributed_mvc_frame](https://github.com/smarty-kiki/distributed_mvc_frame)  
