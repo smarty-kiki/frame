@@ -20,7 +20,7 @@
 * 快捷的开发辅助工具，如快捷生成 entity、dao、migration 工具 entity:make
 
 # 目录结果及文件说明
-
+```
 frame  
 ├── cache (缓存类功能文件目录)  
 │   ├── demo.php  
@@ -48,7 +48,7 @@ frame
 ├── function.php (辅助函数)  
 ├── otherwise.php (断言能力)  
 └── unitofwork.php (工作单元能力)  
-
+```
 # 已搭配好的架构
 
 [小API架构 api_frame](https://github.com/smarty-kiki/api_frame)  
