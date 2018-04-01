@@ -388,6 +388,18 @@ function not_empty($mixed)
 }/*}}}*/
 
 /**
+ * not null.
+ *
+ * @param mixed $mixed
+ *
+ * @return mixed
+ */
+function not_null($mixed)
+{/*{{{*/
+    return !is_null($mixed);
+}/*}}}*/
+
+/**
  * all not empty.
  *
  * @param mixed $mixed
