@@ -20,7 +20,7 @@
 * 快捷的开发辅助工具，如快捷生成 entity、dao、migration 工具 entity:make
 
 # 目录结果及文件说明
-
+```
 frame  
 ├── cache (缓存类功能文件目录)  
 │   ├── demo.php  
@@ -29,12 +29,14 @@ frame
 ├── database (数据库类功能文件目录)  
 │   ├── demo.php  
 │   └── mysql.php (mysql 数据库)  
+├── dialogue (对话功能文件目录)  
 ├── queue (队列类功能文件目录)  
 │   ├── demo.php  
 │   └── beanstalk.php (beanstalk 队列)  
 ├── http (http 入口类功能文件目录)  
-│   ├── api.php (API 能力)  
-│   └── view.php (页面能力)  
+│   ├── application.php (web 能力)  
+│   ├── distributed_client.php (分布式服务 client 能力)  
+│   ├── distributed_service.php (分布式服务 service 能力)  
 ├── lock (锁类功能文件目录)  
 │   ├── demo.php  
 │   └── cache.php (使用缓存实现锁)  
@@ -46,8 +48,15 @@ frame
 ├── function.php (辅助函数)  
 ├── otherwise.php (断言能力)  
 └── unitofwork.php (工作单元能力)  
-
+```
 # 已搭配好的架构
 
 [小API架构 api_frame](https://github.com/smarty-kiki/api_frame)  
-[小MVC架构 micro_frame](https://github.com/smarty-kiki/mvc_frame)
+[小MVC架构 mvc_frame](https://github.com/smarty-kiki/mvc_frame)  
+  
+[分布式架构应用层框架 distributed_api_frame](https://github.com/smarty-kiki/distributed_api_frame)  
+[分布式架构应用层框架 distributed_mvc_frame](https://github.com/smarty-kiki/distributed_mvc_frame)  
+[分布式架构应用层框架 distributed_cli_frame](https://github.com/smarty-kiki/distributed_cli_frame)  
+[分布式架构服务层框架 distributed_service_frame](https://github.com/smarty-kiki/distributed_service_frame)  
+  
+分布式框架需组合应用层与服务层来使用
