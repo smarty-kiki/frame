@@ -326,3 +326,25 @@ function db_simple_query_first($table, array $wheres, $option_sql = '', $config_
 
     return db_query_first('select * from `'.$table.'` where '.$where.' '.$option_sql, $binds, $config_key);
 }/*}}}*/
+
+function db_simple_query_indexed($table, $indexed, array $wheres, $option_sql = 'order by id', $config_key = 'default')
+{/*{{{*/
+    $datas = db_simple_query($table, $wheres, $option_sql, $config_key);
+
+    $res = [];
+
+    foreach ($datas as $data) {
+        $res[$data[$indexed]] = $data;
+    }
+
+    return $res;
+}/*}}}*/
+
+function db_simple_query_value($value, $table, array $wheres, $config_key = 'default')
+{/*{{{*/
+  list($where, $binds) = db_simple_where_sql($wheres);
+
+  $row = db_query_value($value, "select `$value` from `$table` where $where", $binds, $config_key);
+
+  return $row[$value];
+}/*}}}*/
