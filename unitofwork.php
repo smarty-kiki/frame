@@ -73,13 +73,26 @@ function generate_id($mark = 'idgenter')
 {
     static $step = 1;
 
-    static $now_id;
-    static $step_last_id;
+    static $generators = [];
 
-    if ($now_id == $step_last_id) {
-        $step_last_id = cache_increment($mark.'_last_id', $step, 0, 'idgenter');
-        $now_id = $step_last_id - $step;
+    if (! array_key_exists($mark, $generators)) {
+
+        $generator = $generators[$mark] = function () use ($step, $mark) {
+
+            static $now_id;
+            static $step_last_id;
+
+            if ($now_id == $step_last_id) {
+                $step_last_id = cache_increment($mark.'_last_id', $step, 0, 'idgenter');
+                $now_id = $step_last_id - $step;
+            }
+
+            return $now_id += 1;
+        };
+    } else {
+
+        $generator = $generators[$mark];
     }
 
-    return $now_id += 1;
+    return call_user_func($generator);
 }
