@@ -82,7 +82,7 @@ function generate_id($mark = 'idgenter')
             static $now_id;
             static $step_last_id;
 
-            if ($now_id == $step_last_id) {
+            if ($now_id === $step_last_id) {
                 $step_last_id = cache_increment($mark.'_last_id', $step, 0, 'idgenter');
                 $now_id = $step_last_id - $step;
             }
