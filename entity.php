@@ -39,7 +39,7 @@ abstract class entity implements JsonSerializable, Serializable
 
     final public static function generate_id()
     {
-        return generate_id();
+        return generate_id(get_called_class());
     }
 
     final public function is_new()
