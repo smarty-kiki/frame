@@ -434,14 +434,14 @@ function has_empty(...$args)
 }/*}}}*/
 
 /**
- * now.
+ * datetime.
  *
  * @param mixed  $expression
  * @param string $format
  *
  * @return string
  */
-function now($expression = null, $format = 'Y-m-d H:i:s')
+function datetime($expression = null, $format = 'y-m-d H:i:s')
 {/*{{{*/
     if (is_null($expression)) {
         $time = time();
@@ -454,18 +454,31 @@ function now($expression = null, $format = 'Y-m-d H:i:s')
     return date($format, $time);
 }/*}}}*/
 
-/**
- * if date between start date and end date.
- *
- * @param string $date
- * @param string $start
- * @param string $end
- *
- * @return bool
- */
-function date_between($date, $start, $end)
+function datetime_diff($datetime1, $datetime2, $format = '%s')
 {/*{{{*/
-    return strtotime($date) >= strtotime($start) && strtotime($date) <= strtotime($end);
+    $interval = date_diff(
+        date_create($datetime1),
+        date_create($datetime2)
+    );
+
+    $res = $interval->format($format);
+
+    $total_hours = $interval->days * 24 + $interval->h;
+
+    $total_minutes = $total_hours * 60 + $interval->i;
+
+    $total_seconds = $total_minutes * 60 + $interval->s;
+
+    foreach ([
+        '%td' => $interval->days,
+        '%th' => $total_hours,
+        '%tm' => $total_minutes,
+        '%ts' => $total_seconds,
+    ] as $k => $v) {
+        $res = str_replace($k, $v, $res);
+    }
+
+    return $res;
 }/*}}}*/
 
 /**

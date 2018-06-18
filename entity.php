@@ -25,7 +25,6 @@ abstract class entity implements JsonSerializable, Serializable
     protected static function init()
     {
         $static = new static();
-        $static->attributes = $static->structs;
         $static->id = self::generate_id();
         $static->version = self::INIT_VERSION;
         $static->is_force_deleted = false;
@@ -250,6 +249,7 @@ class null_entity extends entity
         if (! is_null($mock_entity_name)) {
 
             $null_entity_mock_attribute_list = $mock_entity_name::$null_entity_mock_attributes;
+
             if (array_key_exists($property, $null_entity_mock_attribute_list)) {
 
                 return $null_entity_mock_attribute_list[$property];
