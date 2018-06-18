@@ -38,7 +38,7 @@ abstract class entity implements JsonSerializable, Serializable
 
     final public static function generate_id()
     {
-        return generate_id();
+        return generate_id(get_called_class());
     }
 
     final public function is_new()
@@ -556,6 +556,14 @@ class dao
 
         $entity->id = $rows['id'];
         $entity->version = $rows['version'];
+        $entity->delete_time = $rows['delete_time'];
+
+        unset($rows['id']);
+        unset($rows['version']);
+        unset($rows['create_time']);
+        unset($rows['update_time']);
+        unset($rows['delete_time']);
+
         $entity->attributes = $entity->structs = $rows;
 
         return $entity;
