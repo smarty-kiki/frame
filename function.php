@@ -441,7 +441,7 @@ function has_empty(...$args)
  *
  * @return string
  */
-function datetime($expression = null, $format = 'y-m-d H:i:s')
+function datetime($expression = null, $format = 'Y-m-d H:i:s')
 {/*{{{*/
     if (is_null($expression)) {
         $time = time();
@@ -454,7 +454,7 @@ function datetime($expression = null, $format = 'y-m-d H:i:s')
     return date($format, $time);
 }/*}}}*/
 
-function datetime_diff($datetime1, $datetime2, $format = '%s')
+function datetime_diff($datetime1, $datetime2, $format = '%ts')
 {/*{{{*/
     $interval = date_diff(
         date_create($datetime1),
