@@ -28,7 +28,7 @@ abstract class entity implements JsonSerializable, Serializable
         $static->id = self::generate_id();
         $static->version = self::INIT_VERSION;
         $static->is_force_deleted = false;
-        $static->create_time = $static->update_time = now();
+        $static->create_time = $static->update_time = datetime();
         $static->delete_time = null;
 
         local_cache_set($static);
@@ -58,7 +58,7 @@ abstract class entity implements JsonSerializable, Serializable
 
     final public function delete()
     {
-        $this->delete_time = now();
+        $this->delete_time = datetime();
     }
 
     final public function restore()
@@ -544,7 +544,7 @@ class dao
         }
 
         $rows['version'] = $entity->version + 1;
-        $rows['update_time'] = now();
+        $rows['update_time'] = datetime();
         $rows['delete_time'] = $entity->delete_time;
 
         return $rows;

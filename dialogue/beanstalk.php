@@ -123,7 +123,7 @@ function _dialogue_push($user_id, $content, $tube, $is_sync = false, $delay = 0,
     $message = [
         'user_id' => $user_id,
         'content' => $content,
-        'time' => now(),
+        'time' => datetime(),
     ];
 
     if ($is_sync) {
@@ -298,7 +298,7 @@ function dialogue_watch($config_key = 'default', $memory_limit = 1048576)
         $content = $message['content'];
         $time = $message['time'];
 
-        if (now($time." +1 min") > now()) {
+        if (datetime($time." +1 min") > datetime()) {
 
             $matched_topic = false;
 
