@@ -1,4 +1,7 @@
 <?php
+/**
+ *  todo::close
+ */
 
 function _oracle_connection($host, $port, $database, $username, $password, $charset, $options = [])
 {/*{{{*/

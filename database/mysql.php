@@ -1,27 +1,42 @@
 <?php
 
-function _mysql_connection($host, $port_or_sock, $database, $username, $password, $charset, $collation, $options = [])
+function _mysql_connection(array $config)
 {/*{{{*/
     static $container = [];
 
-    if (is_numeric($port_or_sock)) {
-        $dsn = "mysql:host={$host};port={$port_or_sock};dbname={$database}";
+    if (empty($config)) {
+
+        return $container = [];
     } else {
-        $dsn = "mysql:unix_socket={$port_or_sock};dbname={$database}";
+
+        $host = $config['host'];
+        $port_or_sock = $config['port'];
+        $database = $config['database'];
+        $username = $config['username'];
+        $password = $config['password'];
+        $charset = $config['charset'];
+        $collation = $config['collation'];
+        $options = $config['options'];
+
+        if (is_numeric($port_or_sock)) {
+            $dsn = "mysql:host={$host};port={$port_or_sock};dbname={$database}";
+        } else {
+            $dsn = "mysql:unix_socket={$port_or_sock};dbname={$database}";
+        }
+
+        $identifier = $dsn.'|'.$username.'|'.$password;
+
+        if (!isset($container[$identifier])) {
+
+            $connection = new PDO($dsn, $username, $password, $options);
+
+            $connection->prepare("set names '{$charset}' collate '{$collation}'")->execute();
+
+            $container[$identifier] = $connection;
+        }
+
+        return $container[$identifier];
     }
-
-    $identifier = $dsn.'|'.$username.'|'.$password;
-
-    if (!isset($container[$identifier])) {
-
-        $connection = new PDO($dsn, $username, $password, $options);
-
-        $connection->prepare("set names '{$charset}' collate '{$collation}'")->execute();
-
-        $container[$identifier] = $connection;
-    }
-
-    return $container[$identifier];
 }/*}}}*/
 
 function _mysql_database_closure($config_key, $type, closure $closure)
@@ -36,16 +51,16 @@ function _mysql_database_closure($config_key, $type, closure $closure)
 
     $config = $configs[$config_key];
 
-    $connection = _mysql_connection(
-        $host = array_rand($config[$type]),
-        $port = $config[$type][$host],
-        $config['database'],
-        $config['username'],
-        $config['password'],
-        $config['charset'],
-        $config['collation'],
-        $configs['options']
-    );
+    $connection = _mysql_connection([
+        'host' => $host = array_rand($config[$type]),
+        'port' => $config[$type][$host],
+        'database' => $config['database'],
+        'username' => $config['username'],
+        'password' => $config['password'],
+        'charset' => $config['charset'],
+        'collation' => $config['collation'],
+        'options' => $configs['options'],
+    ]);
 
     return call_user_func($closure, $connection);
 }/*}}}*/
@@ -226,6 +241,11 @@ function db_transaction(closure $action, $config_key = 'default')
             db_force_type_write(false);
         }
     });
+}/*}}}*/
+
+function db_close()
+{/*{{{*/
+    return _mysql_connection([]);
 }/*}}}*/
 
 function db_simple_where_sql(array $wheres)

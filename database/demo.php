@@ -16,6 +16,8 @@ function db_structure($sql, $database = 'default') { }
 
 function db_transaction(closure $action, $database = 'default') { }
 
+function db_close() {}
+
 function db_simple_where_sql(array $wheres) {}
 
 function db_simple_insert($table, array $data, $config_key = 'default') { }

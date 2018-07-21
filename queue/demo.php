@@ -1,5 +1,7 @@
 <?php
 
+function queue_finish_action() {}
+
 function queue_job_pickup($job_name) {}
 
 function queue_jobs($jobs = null) {}

@@ -1,5 +1,10 @@
 <?php
 
+/**
+ *   todo
+ *   close
+ */
+
 function _memcache_cache_closure($config_key, closure $closure)
 {/*{{{*/
     static $config = array();
@@ -108,4 +113,8 @@ function cache_decrement($key, $number = 1, $expires = 86400, $config_key = 'def
         return memcache_decrement($connection, (string) $key, (int) $number);
 
     });
+}/*}}}*/
+
+function cache_close()
+{/*{{{*/
 }/*}}}*/

@@ -309,6 +309,17 @@ function _beanstalk_list_tube_watched($fp)
     return _beanstalk_stats_read($fp);
 }/*}}}*/
 
+function queue_finish_action(closure $action = null)
+{/*{{{*/
+    static $container = null;
+
+    if (!empty($action)) {
+        return $container = $action;
+    }
+
+    return $container;
+}/*}}}*/
+
 function queue_job_pickup($job_name)
 {/*{{{*/
     $jobs = queue_jobs();
@@ -373,6 +384,8 @@ function queue_watch($tube = 'default', $config_key = 'default', $memory_limit =
         $received_signal = true;
     });
 
+    $finished_action = queue_finish_action();
+
     $fp = _beanstalk_connection($config_key);
 
     _beanstalk_watch($fp, $tube);
@@ -421,6 +434,10 @@ function queue_watch($tube = 'default', $config_key = 'default', $memory_limit =
             } else {
                 _beanstalk_bury($fp, $id);
             }
+        }
+
+        if ($finished_action instanceof closure) {
+            call_user_func($finished_action);
         }
     }
 }/*}}}*/
