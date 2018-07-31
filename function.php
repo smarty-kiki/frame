@@ -58,6 +58,31 @@ function array_set(&$array, $key, $value)
 }/*}}}*/
 
 /**
+ * array_exists
+ *
+ * @param mixed $array
+ * @param mixed $key
+ * @access public
+ * @return void
+ */
+function array_exists($array, $key)
+{/*{{{*/
+    if (is_null($key)) {
+        return false;
+    }
+
+    foreach (explode('.', $key) as $segment) {
+        if (!is_array($array) || !array_key_exists($segment, $array)) {
+            return false;
+        }
+
+        $array = $array[$segment];
+    }
+
+    return true;
+}/*}}}*/
+
+/**
  * Fetch a flattened array of a nested array element.
  *
  * @param array  $array
@@ -194,6 +219,27 @@ function aksort(&$array, $valrev = false, $keyrev = false)
     }
 
     return $sort_array;
+}/*}}}*/
+
+/**
+ * str_cut
+ *
+ * @param mixed $string
+ * @param mixed $len
+ * @param string $suffix
+ * @access public
+ * @return void
+ */
+function str_cut($string, $len, $suffix = '...')
+{/*{{{*/
+    $strlen = mb_strlen($string);
+    $suffixlen = mb_strlen($suffix);
+
+    if ($strlen > $len) {
+        return mb_substr($string, 0, $len - $suffixlen) . $suffix;
+    }
+
+    return $string;
 }/*}}}*/
 
 /**
