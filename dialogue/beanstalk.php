@@ -19,7 +19,18 @@ function dialogue_send_action(closure $action = null)
     return $container;
 }/*}}}*/
 
-function dialogue_topic_miss(closure $action = null)
+function dialogue_topic_miss_action(closure $action = null)
+{/*{{{*/
+    static $container = null;
+
+    if (!empty($action)) {
+        return $container = $action;
+    }
+
+    return $container;
+}/*}}}*/
+
+function dialogue_topic_finish_action(closure $action = null)
 {/*{{{*/
     static $container = null;
 
@@ -280,7 +291,8 @@ function dialogue_watch($config_key = 'default', $memory_limit = 1048576)
     });
 
     $topics = dialogue_topics();
-    $missed_action = dialogue_topic_miss();
+    $missed_action = dialogue_topic_miss_action();
+    $finished_action = dialogue_topic_finish_action();
 
     for (;;) {
 
@@ -310,17 +322,20 @@ function dialogue_watch($config_key = 'default', $memory_limit = 1048576)
 
                     if ($matched_topic) {
 
-
                         _dialogue_operator_talking_with_user($user_id, function () use ($info, $user_id, $content, $time, $args) {
                             call_user_func_array($info['closure'], array_merge([$user_id, $content, $time], $args));
                         });
 
-                        continue(3);
+                        break(2);
                     }
                 }
             }
 
-            if (! $matched_topic) {
+            if ($matched_topic) {
+                if ($finished_action instanceof closure) {
+                    call_user_func($finished_action, $user_id, $content, $time);
+                }
+            } else {
                 if ($missed_action instanceof closure) {
                     call_user_func($missed_action, $user_id, $content, $time);
                 }

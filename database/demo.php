@@ -16,6 +16,8 @@ function db_structure($sql, $database = 'default') { }
 
 function db_transaction(closure $action, $database = 'default') { }
 
+function db_close() {}
+
 function db_simple_where_sql(array $wheres) {}
 
 function db_simple_insert($table, array $data, $config_key = 'default') { }
@@ -27,3 +29,5 @@ function db_simple_delete($table, array $wheres, $config_key = 'default') {}
 
 function db_simple_query($table, array $wheres, $option_sql = 'order by id', $config_key = 'default') {}
 function db_simple_query_first($table, array $wheres, $option_sql = '', $config_key = 'default') {}
+function db_simple_query_indexed($table, $indexed, array $wheres, $option_sql = 'order by id', $config_key = 'default') {}
+function db_simple_query_value($value, $table, array $wheres, $config_key = 'default') {}

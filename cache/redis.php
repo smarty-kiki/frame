@@ -1,44 +1,55 @@
 <?php
 
-function _redis_connection($config)
+function _redis_connection(array $config)
 {/*{{{*/
     static $container = [];
 
-    $is_sock = isset($config['sock']);
+    if (empty($config)) {
 
-    $sign = $is_sock ?
-        $config['sock'] . $config['timeout']:
-        $config['host'] . $config['port'] . $config['timeout'];
-
-    if (empty($container[$sign])) {
-        $redis = new Redis();
-
-        if ($is_sock) {
-            $redis->pconnect($config['sock'], $config['timeout']);
-        } else {
-            $redis->pconnect($config['host'], $config['port'], $config['timeout']);
+        foreach ($container as $connection) {
+            $connection->close();
         }
 
-        if (isset($config['auth'])) {
-            $redis->auth($config['auth']);
-        }
-
-        $container[$sign] = $redis;
+        return $container = [];
     } else {
-        $redis = $container[$sign];
-    }
 
-    if (isset($config['database'])) {
-        $redis->select($config['database']);
-    }
+        $is_sock = isset($config['sock']);
 
-    if (isset($config['options'])) {
-        foreach ($config['options'] as $key => $value) {
-            $redis->setOption($key, $value);
+        $sign = $is_sock ?
+            $config['sock'] . $config['timeout']:
+            $config['host'] . $config['port'] . $config['timeout'];
+
+        if (empty($container[$sign])) {
+
+            $redis = new Redis();
+
+            if ($is_sock) {
+                $redis->connect($config['sock'], $config['timeout']);
+            } else {
+                $redis->connect($config['host'], $config['port'], $config['timeout']);
+            }
+
+            if (isset($config['auth'])) {
+                $redis->auth($config['auth']);
+            }
+
+            $container[$sign] = $redis;
+        } else {
+            $redis = $container[$sign];
         }
-    }
 
-    return $redis;
+        if (isset($config['database'])) {
+            $redis->select($config['database']);
+        }
+
+        if (isset($config['options'])) {
+            foreach ($config['options'] as $key => $value) {
+                $redis->setOption($key, $value);
+            }
+        }
+
+        return $redis;
+    }
 }/*}}}*/
 
 function _redis_cache_closure($config_key, closure $closure)
@@ -159,4 +170,9 @@ function cache_keys($pattern = '*', $config_key = 'default')
 
         return $redis->keys($pattern);
     });
+}/*}}}*/
+
+function cache_close()
+{/*{{{*/
+    return _redis_connection([]);
 }/*}}}*/

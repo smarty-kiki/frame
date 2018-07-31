@@ -1,71 +1,50 @@
 <?php
+/**
+ *  todo::close
+ */
 
-function _mysql_connection(array $config)
+function _oracle_connection($host, $port, $database, $username, $password, $charset, $options = [])
 {/*{{{*/
     static $container = [];
 
-    if (empty($config)) {
+    $dsn = "oci:dbname=//{$host}:{$port}/{$database};charset={$charset}";
 
-        return $container = [];
-    } else {
+    $identifier = $dsn.'|'.$username.'|'.$password;
 
-        $host = $config['host'];
-        $port_or_sock = $config['port'];
-        $database = $config['database'];
-        $username = $config['username'];
-        $password = $config['password'];
-        $charset = $config['charset'];
-        $collation = $config['collation'];
-        $options = $config['options'];
+    if (!isset($container[$identifier])) {
 
-        if (is_numeric($port_or_sock)) {
-            $dsn = "mysql:host={$host};port={$port_or_sock};dbname={$database}";
-        } else {
-            $dsn = "mysql:unix_socket={$port_or_sock};dbname={$database}";
-        }
-
-        $identifier = $dsn.'|'.$username.'|'.$password;
-
-        if (!isset($container[$identifier])) {
-
-            $connection = new PDO($dsn, $username, $password, $options);
-
-            $connection->prepare("set names '{$charset}' collate '{$collation}'")->execute();
-
-            $container[$identifier] = $connection;
-        }
-
-        return $container[$identifier];
+        $container[$identifier] = new PDO($dsn, $username, $password, $options);
     }
+
+    return $container[$identifier];
 }/*}}}*/
 
-function _mysql_database_closure($config_key, $type, closure $closure)
+function _oracle_database_closure($config_key, $type, closure $closure)
 {/*{{{*/
     static $configs = [];
 
     if (empty($configs)) {
-        $configs = config('mysql');
+        $configs = config('oracle');
     }
 
     $type = db_force_type_write()? 'write': $type;
 
     $config = $configs[$config_key];
 
-    $connection = _mysql_connection([
-        'host' => $host = array_rand($config[$type]),
-        'port' => $config[$type][$host],
-        'database' => $config['database'],
-        'username' => $config['username'],
-        'password' => $config['password'],
-        'charset' => $config['charset'],
-        'collation' => $config['collation'],
-        'options' => $configs['options'],
-    ]);
+    $connection = _oracle_connection(
+        $host = array_rand($config[$type]),
+        $port = $config[$type][$host],
+        $config['database'],
+        $config['username'],
+        $config['password'],
+        $config['charset'],
+        $configs['options']
+    );
 
     return call_user_func($closure, $connection);
 }/*}}}*/
 
-function _mysql_sql_binds($sql_template, array $binds)
+function _oracle_sql_binds($sql_template, array $binds)
 {/*{{{*/
     $res_binds = [];
 
@@ -99,9 +78,9 @@ function db_force_type_write($bool = null)
 
 function db_query($sql_template, array $binds = [], $config_key = 'default')
 {/*{{{*/
-    list($sql_template, $binds) = _mysql_sql_binds($sql_template, $binds);
+    list($sql_template, $binds) = _oracle_sql_binds($sql_template, $binds);
 
-    return _mysql_database_closure($config_key, 'read', function ($connection) use ($sql_template, $binds) {
+    return _oracle_database_closure($config_key, 'read', function ($connection) use ($sql_template, $binds) {
 
         $st = $connection->prepare($sql_template);
 
@@ -115,9 +94,9 @@ function db_query_first($sql_template, array $binds = [], $config_key = 'default
 {/*{{{*/
     $sql_template = str_finish($sql_template, ' limit 1');
 
-    list($sql_template, $binds) = _mysql_sql_binds($sql_template, $binds);
+    list($sql_template, $binds) = _oracle_sql_binds($sql_template, $binds);
 
-    return _mysql_database_closure($config_key, 'read', function ($connection) use ($sql_template, $binds) {
+    return _oracle_database_closure($config_key, 'read', function ($connection) use ($sql_template, $binds) {
 
         $st = $connection->prepare($sql_template);
 
@@ -149,9 +128,9 @@ function db_query_value($value, $sql_template, array $binds = [], $config_key = 
 
 function db_update($sql_template, array $binds = [], $config_key = 'default')
 {/*{{{*/
-    list($sql_template, $binds) = _mysql_sql_binds($sql_template, $binds);
+    list($sql_template, $binds) = _oracle_sql_binds($sql_template, $binds);
 
-    return _mysql_database_closure($config_key, 'write', function ($connection) use ($sql_template, $binds) {
+    return _oracle_database_closure($config_key, 'write', function ($connection) use ($sql_template, $binds) {
 
         $st = $connection->prepare($sql_template);
 
@@ -163,9 +142,9 @@ function db_update($sql_template, array $binds = [], $config_key = 'default')
 
 function db_delete($sql_template, array $binds = [], $config_key = 'default')
 {/*{{{*/
-    list($sql_template, $binds) = _mysql_sql_binds($sql_template, $binds);
+    list($sql_template, $binds) = _oracle_sql_binds($sql_template, $binds);
 
-    return _mysql_database_closure($config_key, 'write', function ($connection) use ($sql_template, $binds) {
+    return _oracle_database_closure($config_key, 'write', function ($connection) use ($sql_template, $binds) {
 
         $st = $connection->prepare($sql_template);
 
@@ -177,9 +156,9 @@ function db_delete($sql_template, array $binds = [], $config_key = 'default')
 
 function db_insert($sql_template, array $binds = [], $config_key = 'default')
 {/*{{{*/
-    list($sql_template, $binds) = _mysql_sql_binds($sql_template, $binds);
+    list($sql_template, $binds) = _oracle_sql_binds($sql_template, $binds);
 
-    return _mysql_database_closure($config_key, 'write', function ($connection) use ($sql_template, $binds) {
+    return _oracle_database_closure($config_key, 'write', function ($connection) use ($sql_template, $binds) {
 
         $st = $connection->prepare($sql_template);
 
@@ -191,9 +170,9 @@ function db_insert($sql_template, array $binds = [], $config_key = 'default')
 
 function db_write($sql_template, array $binds = [], $config_key = 'default')
 {/*{{{*/
-    list($sql_template, $binds) = _mysql_sql_binds($sql_template, $binds);
+    list($sql_template, $binds) = _oracle_sql_binds($sql_template, $binds);
 
-    return _mysql_database_closure($config_key, 'write', function ($connection) use ($sql_template, $binds) {
+    return _oracle_database_closure($config_key, 'write', function ($connection) use ($sql_template, $binds) {
 
         $st = $connection->prepare($sql_template);
 
@@ -205,7 +184,7 @@ function db_write($sql_template, array $binds = [], $config_key = 'default')
 
 function db_structure($sql, $config_key = 'default')
 {/*{{{*/
-    return _mysql_database_closure($config_key, 'schema', function ($connection) use ($sql) {
+    return _oracle_database_closure($config_key, 'schema', function ($connection) use ($sql) {
 
         $st = $connection->prepare($sql);
 
@@ -219,7 +198,7 @@ function db_transaction(closure $action, $config_key = 'default')
 {/*{{{*/
     db_force_type_write(true);
 
-    return _mysql_database_closure($config_key, 'write', function ($connection) use ($action) {
+    return _oracle_database_closure($config_key, 'write', function ($connection) use ($action) {
 
         $began = $connection->beginTransaction();
 
@@ -241,11 +220,6 @@ function db_transaction(closure $action, $config_key = 'default')
             db_force_type_write(false);
         }
     });
-}/*}}}*/
-
-function db_close()
-{/*{{{*/
-    return _mysql_connection([]);
 }/*}}}*/
 
 function db_simple_where_sql(array $wheres)

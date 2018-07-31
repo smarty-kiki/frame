@@ -12,3 +12,5 @@ function cache_multi_delete(array $keys, $config_key = 'default') { }
 
 function cache_increment($key, $number = 1, $expires = 0, $config_key = 'default') { }
 function cache_decrement($key, $number = 1, $expires = 0, $config_key = 'default') { }
+
+function cache_close() {}

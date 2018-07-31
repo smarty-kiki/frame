@@ -175,16 +175,31 @@ function array_build($array, Closure $callback)
  *
  * @return array
  */
-function array_key_sort($arr)
+function array_key_sort($array)
 {/*{{{*/
-    ksort($arr);
-    foreach ($arr as $k => $v) {
+    ksort($array);
+    foreach ($array as $k => $v) {
         if (is_array($v)) {
-            $arr[$k] = array_key_sort($v);
+            $array[$k] = array_key_sort($v);
         }
     }
 
-    return $arr;
+    return $array;
+}/*}}}*/
+
+function array_list(array $array, array $names)
+{/*{{{*/
+    if (empty($names)) {
+        return [];
+    }
+
+    $values = [];
+
+    foreach ($names as $name) {
+        $values[] = $array[$name];
+    }
+
+    return $values;
 }/*}}}*/
 
 /**
