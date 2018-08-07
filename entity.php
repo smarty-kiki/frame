@@ -25,6 +25,7 @@ abstract class entity implements JsonSerializable, Serializable
     protected static function init()
     {
         $static = new static();
+        $static->attributes = $static->structs;
         $static->id = self::generate_id();
         $static->version = self::INIT_VERSION;
         $static->is_force_deleted = false;
