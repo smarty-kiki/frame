@@ -515,6 +515,10 @@ function _dialogue_content_match($content, $pattern)
     static $match_key = 0;
     static $catch_key = 1;
 
+    if (is_null($pattern)) {
+        return $content;
+    }
+
     $count = preg_match_all($pattern, $content, $matches);
 
     if (array_key_exists($match_key, $matches)) {
