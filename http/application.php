@@ -325,7 +325,7 @@ function input_json($name, $default = null)
 {
     static $post_data = null;
 
-    if (is_null($default)) {
+    if (is_null($post_data)) {
         $post_data = json_decode(input_post_raw(), true);
     }
 
