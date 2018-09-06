@@ -55,7 +55,7 @@ function unit_of_work(Closure $action)
 
     if ($sqls) {
         if (count($sqls) > 1) {
-            db_transaction(function () use ($sqls) {
+            db_transaction(function () use ($sqls,$db_config_key) {
                 foreach ($sqls as $sql) {
                     _unit_of_work_write($sql['sql_template'], $sql['binds'], $db_config_key);
                 }

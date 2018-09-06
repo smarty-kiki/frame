@@ -360,7 +360,7 @@ class dao
         }
     }/*}}}*/
 
-    private function find_by_id($id)
+    public function find_by_id($id)
     {/*{{{*/
         if (empty($id)) {
             return null_entity::create($this->class_name);
@@ -470,7 +470,7 @@ class dao
         ]);
     }/*}}}*/
 
-    protected function find_all_by_condition($condition, array $binds = [])
+    public function find_all_by_condition($condition, array $binds = [])
     {/*{{{*/
         return $this->find_all_by_sql('select * from `'.$this->table_name.'` where '.$condition, $binds);
     }/*}}}*/

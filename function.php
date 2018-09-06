@@ -478,6 +478,23 @@ function all_not_empty(...$args)
 }/*}}}*/
 
 /**
+ * all empty.
+ *
+ * @param mixed $mixed
+ *
+ * @return mixed
+ */
+function all_empty()
+{
+    foreach (func_get_args() as $arg) {
+
+        if (!empty($arg)) return false;
+    }
+
+    return true;
+}
+
+/**
  * has empty.
  *
  * @param mixed $mixed
@@ -596,6 +613,8 @@ function remote_post($url, $data = [], $timeout = 3, $retry = 3, array $headers 
 
 function remote_post_json($url, $data = [], $timeout = 3, $retry = 3, array $headers = [], array $cookies = [])
 {/*{{{*/
+    $data = json_encode($data,JSON_UNESCAPED_UNICODE);
+    $headers = array_merge($headers,['Content-type: application/json; charset=utf-8']);
     return json_decode(remote_post($url, $data, $timeout, $retry, $headers, $cookies), true);
 }/*}}}*/
 

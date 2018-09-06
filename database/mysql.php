@@ -48,11 +48,11 @@ function _mysql_database_closure($config_key, $type, closure $closure)
     }
 
     $type = db_force_type_write()? 'write': $type;
-
     $config = $configs[$config_key];
 
-    $connection = _mysql_connection([
-        'host' => $host = array_rand($config[$type]),
+    $host = array_rand($config[$type]);
+    $connection_config =[
+        'host' => $host,
         'port' => $config[$type][$host],
         'database' => $config['database'],
         'username' => $config['username'],
@@ -60,7 +60,15 @@ function _mysql_database_closure($config_key, $type, closure $closure)
         'charset' => $config['charset'],
         'collation' => $config['collation'],
         'options' => $configs['options'],
-    ]);
+    ];
+
+    foreach($connection_config as $key=>$value){
+        if(isset($config[$type][$host][$key])){
+            $connection_config[$key] = $config[$type][$host][$key];
+        }
+    }
+
+    $connection = _mysql_connection($connection_config);
 
     return call_user_func($closure, $connection);
 }/*}}}*/
