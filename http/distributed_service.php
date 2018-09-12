@@ -81,7 +81,7 @@ function service_args()
     foreach ($args as $arg) {
 
         if ($arg instanceof entity && false === $arg instanceof null_entity) {
-            $arg = call_user_func([get_class($arg).'_dao', 'find_by_id'], $arg->id);
+            $arg = dao(get_class($arg))->find($arg->id);
         }
 
         $returns[] = $arg;

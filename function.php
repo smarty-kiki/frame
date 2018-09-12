@@ -461,6 +461,23 @@ function not_null($mixed)
 }/*}}}*/
 
 /**
+ * all empty.
+ *
+ * @param mixed $mixed
+ *
+ * @return mixed
+ */
+function all_empty(...$args)
+{/*{{{*/
+    foreach ($args as $arg) {
+
+        if (!empty($arg)) return false;
+    }
+
+    return true;
+}/*}}}*/
+
+/**
  * all not empty.
  *
  * @param mixed $mixed
@@ -469,12 +486,7 @@ function not_null($mixed)
  */
 function all_not_empty(...$args)
 {/*{{{*/
-    foreach ($args as $arg) {
-
-        if (empty($arg)) return false;
-    }
-
-    return true;
+    return ! has_empty($args);
 }/*}}}*/
 
 /**
