@@ -107,7 +107,16 @@ function command_read($prompt, $default = true, array $options = [])
 
 function command_read_bool($prompt)
 {/*{{{*/
-    $res = command_read("$prompt [y/n]?", 'y');
+    $map = [
+        'y' => true,
+        'n' => false,
+    ];
 
-    return ('y' === $res);
+    do {
+
+        $res = command_read("$prompt [y/n]?", 'y');
+
+    } while (! array_key_exists($res, $map));
+
+    return $map[$res];
 }/*}}}*/

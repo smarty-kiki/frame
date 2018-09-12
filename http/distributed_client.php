@@ -12,7 +12,7 @@ function client_call($service_name, $method, $args = [])
 
     $ip = $ips[array_rand($ips)];
 
-    $raw_data = remote_post('http://'.$ip.'/'.$method, serialize($args), $timeout, $retry, ['host:'.$host]);
+    $raw_data = remote_post('http://'.$ip.'/'.$method, serialize($args), $timeout, $retry, ["host: $host"]);
 
     if (false === $raw_data) {
         return false;
