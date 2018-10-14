@@ -83,7 +83,7 @@ function command_not_found($rule = null, $description = null)
 function command_read($prompt, $default = true, array $options = [])
 {/*{{{*/
     if ($options) {
-        $prompt = "$prompt\n\n";
+        $prompt = "$prompt (Default: $default)\n\n";
         foreach ($options as $key => $option) {
             $prompt .= "  $key) $option\n";
         }
@@ -98,7 +98,7 @@ function command_read($prompt, $default = true, array $options = [])
 
         return $options[$result];
     } else {
-        $prompt = "$prompt\n> ";
+        $prompt = "$prompt (Default: $default)\n> ";
         fwrite(STDOUT, $prompt);  
         $result = trim(fgets(STDIN));  
         return ($result === '')? $default: $result;

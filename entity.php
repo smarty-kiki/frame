@@ -17,6 +17,11 @@ abstract class entity implements JsonSerializable, Serializable
     public $attributes = [];
     protected $json_attributes = [];
 
+    public static $struct_types = [];
+    public static $struct_formats = [];
+    public static $struct_format_descriptions = [];
+
+
     public static $null_entity_mock_attributes = [];
 
     private $relationships = [];
@@ -162,6 +167,20 @@ abstract class entity implements JsonSerializable, Serializable
         }
 
         if (array_key_exists($property, $this->attributes)) {
+
+            if (array_key_exists($property, static::$struct_formats)) {
+
+                $format = static::$struct_formats[$property];
+
+                $format_description = array_key_exists($property, static::$struct_format_descriptions)?  static::$struct_format_descriptions[$property]: $property.' 格式错误';
+
+                if (is_array($format)) {
+                    otherwise(array_key_exists($value, $format), $format_description);
+                } else {
+                    otherwise(preg_match($format, $value), $format_description);
+                }
+            }
+
             return $this->attributes[$property] = $value;
         }
     }
