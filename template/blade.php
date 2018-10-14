@@ -120,6 +120,21 @@ function blade($template)
     return $template;
 }/*}}}*/
 
+function blade_eval($template, $args = [])
+{/*{{{*/
+    extract($args);
+
+    ob_start();
+
+    eval('?>'.blade($template).'<?');
+
+    $echo = ob_get_contents();
+
+    ob_end_clean();
+
+    return $echo;
+}/*}}}*/
+
 function blade_view_file($view)
 {/*{{{*/
     $config = config('blade');
