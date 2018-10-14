@@ -429,6 +429,23 @@ function view_path($path = null)
     return $container;
 }
 
+function view_file(closure $closure = null)
+{
+    static $container = null;
+
+    if (not_null($closure)) {
+        $container = $closure;
+    }
+
+    if (is_null($container)) {
+        $container = function ($view) {
+            return view_path().$view.'.php';
+        };
+    }
+
+    return $container;
+}
+
 /**
  * Render view.
  *
@@ -443,7 +460,7 @@ function render($view, $args = [])
 
     ob_start();
 
-    include view_path().$view.'.php';
+    include view_file($view);
 
     $echo = ob_get_contents();
 
