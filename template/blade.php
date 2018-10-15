@@ -25,7 +25,7 @@ function _blade_compile_includes($value)
 
         foreach ($matches[2] as $i => $template_path) {
 
-            $view_compiled_path = blade_view_file($template_path);
+            $view_compiled_path = blade_view_compiler($template_path);
 
             $value = str_replace($matches[0][$i], "<?php include '$view_compiled_path'; ?>", $value);
         }
@@ -135,14 +135,14 @@ function blade_eval($template, $args = [])
     return $echo;
 }/*}}}*/
 
-function blade_view_file($view)
+function blade_view_compiler($view)
 {/*{{{*/
     $config = config('blade');
 
-    $is_md5 = array_get($config, 'compiled_md5_path', true);
-    $view_compiled_path = array_get($config, 'compiled_path');
-
     $view_path = view_path();
+
+    $is_md5 = array_get($config, 'compiled_md5_path', true);
+    $view_compiled_path = array_get($config, 'compiled_path', $view_path);
 
     $view_file = $view_path.$view.'.php';
 
@@ -174,10 +174,10 @@ function blade_view_file($view)
     }
 }/*}}}*/
 
-function blade_view_file_generator()
+function blade_view_compiler_generate()
 {/*{{{*/
     return function ($view) {
 
-        return blade_view_file($view);
+        return blade_view_compiler($view);
     };
 }/*}}}*/

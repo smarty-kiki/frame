@@ -429,7 +429,7 @@ function view_path($path = null)
     return $container;
 }
 
-function view_file(closure $closure = null)
+function view_compiler(closure $closure = null)
 {
     static $container = null;
 
@@ -458,9 +458,11 @@ function render($view, $args = [])
         extract($args);
     }
 
+    $render = view_compiler();
+
     ob_start();
 
-    include view_file($view);
+    include $render($view);
 
     $echo = ob_get_contents();
 
