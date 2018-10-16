@@ -17,10 +17,13 @@ abstract class entity implements JsonSerializable, Serializable
     public $attributes = [];
     protected $json_attributes = [];
 
+    public static $entity_display_name = '';
+    public static $entity_description = '';
     public static $struct_types = [];
+    public static $struct_display_names = [];
+    public static $struct_descriptions = [];
     public static $struct_formats = [];
     public static $struct_format_descriptions = [];
-
 
     public static $null_entity_mock_attributes = [];
 

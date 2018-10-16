@@ -196,7 +196,22 @@ function array_list(array $array, array $names)
     $values = [];
 
     foreach ($names as $name) {
-        $values[] = $array[$name];
+        $values[] = array_get($array, $name);
+    }
+
+    return $values;
+}/*}}}*/
+
+function array_transfer(array $array, array $rules)
+{/*{{{*/
+    if (empty($rules)) {
+        return [];
+    }
+
+    $values = [];
+
+    foreach ($rules as $from => $to) {
+        $values[$to] = array_get($array, $from);
     }
 
     return $values;
