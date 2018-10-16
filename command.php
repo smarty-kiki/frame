@@ -94,7 +94,7 @@ function command_read($prompt, $default = true, array $options = [])
             fwrite(STDOUT, $prompt);  
             $result = trim(fgets(STDIN));  
             $result = ($result === '')? $default: $result;
-        } while (! isset($options[$result]));
+        } while (! array_key_exists($result, $options));
 
         return $options[$result];
     } else {
