@@ -513,7 +513,6 @@ function dialogue_push_to_other_operator($message, $delay = 0, $priority = 10, $
 function _dialogue_content_match($content, $pattern)
 {/*{{{*/
     static $match_key = 0;
-    static $catch_key = 1;
 
     if (is_null($pattern)) {
         return $content;
@@ -531,21 +530,8 @@ function _dialogue_content_match($content, $pattern)
 
         $count = preg_match_all($pattern, $content, $matches);
 
-        if (array_key_exists($match_key, $matches)) {
-            if (array_key_exists($catch_key, $matches)) {
-                $res = $matches[$catch_key];
-                if ($res) {
-                    return $res;
-                } else {
-                    return false;
-                }
-            } else {
-                if ($matches[$match_key]) {
-                    return true;
-                } else {
-                    return false;
-                }
-            }
+        if (array_key_exists($match_key, $matches) && $matches[$match_key]) {
+            return $content;
         } else {
             return false;
         }
@@ -699,7 +685,7 @@ function dialogue_ask_and_wait($user_id, $ask, $pattern = null, $timeout = 60, $
 
             $matched = _dialogue_content_match($content, $pattern);
 
-            if ($matched) {
+            if (false !== $matched) {
                 return $matched;
             } else {
                 dialogue_push_to_other_operator($message, $delay = 0, $priority = 10, $config_key);
