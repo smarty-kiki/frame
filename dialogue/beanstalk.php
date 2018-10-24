@@ -519,25 +519,36 @@ function _dialogue_content_match($content, $pattern)
         return $content;
     }
 
-    $count = preg_match_all($pattern, $content, $matches);
+    if ($pattern instanceof closure) {
 
-    if (array_key_exists($match_key, $matches)) {
-        if (array_key_exists($catch_key, $matches)) {
-            $res = $matches[$catch_key];
-            if ($res) {
-                return $res;
+        return call_user_func($pattern, $content);
+
+    } elseif (is_array($pattern)) {
+
+        return array_search($content, $pattern);
+
+    } else {
+
+        $count = preg_match_all($pattern, $content, $matches);
+
+        if (array_key_exists($match_key, $matches)) {
+            if (array_key_exists($catch_key, $matches)) {
+                $res = $matches[$catch_key];
+                if ($res) {
+                    return $res;
+                } else {
+                    return false;
+                }
             } else {
-                return false;
+                if ($matches[$match_key]) {
+                    return true;
+                } else {
+                    return false;
+                }
             }
         } else {
-            if ($matches[$match_key]) {
-                return true;
-            } else {
-                return false;
-            }
+            return false;
         }
-    } else {
-        return false;
     }
 }/*}}}*/
 
