@@ -487,19 +487,6 @@ function include_view($view, $args = [])
 }
 
 /**
- * Convert data to json/jsonp.
- *
- * @param array  $data
- * @param string $callback
- *
- * @return string
- */
-function json($data = [])
-{
-    return json_encode($data, JSON_UNESCAPED_UNICODE);
-}
-
-/**
  * Response 304 with ETag.
  *
  * @param string

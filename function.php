@@ -690,3 +690,16 @@ function instance($class_name)
 
     return $container[$class_name];
 }/*}}}*/
+
+/**
+ * Convert data to json/jsonp.
+ *
+ * @param array  $data
+ * @param string $callback
+ *
+ * @return string
+ */
+function json($data = [])
+{/*{{{*/
+    return json_encode($data, JSON_UNESCAPED_UNICODE);
+}/*}}}*/
