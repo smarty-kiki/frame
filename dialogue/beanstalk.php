@@ -355,6 +355,17 @@ function dialogue_topic_finish_action(closure $action = null)
     return $container;
 }/*}}}*/
 
+function dialogue_topic_match_extension_action(closure $action = null)
+{/*{{{*/
+    static $container = null;
+
+    if (!empty($action)) {
+        return $container = $action;
+    }
+
+    return $container;
+}/*}}}*/
+
 /**
  * tool
  */
@@ -382,6 +393,15 @@ function dialogue_topic_match($content, $topic)
 
         foreach ($matches as $v) {
             $args[] = $v[0];
+        }
+    }
+
+    if (! $matched) {
+
+        $match_extension_action = dialogue_topic_match_extension_action();
+
+        if ($match_extension_action instanceof closure) {
+            list($matched, $args) = call_user_func($match_extension_action, $content, $topic);
         }
     }
 
