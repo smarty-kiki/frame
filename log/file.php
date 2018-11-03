@@ -1,6 +1,6 @@
 <?php
 
-function log_exception(exception $ex)
+function log_exception(throwable $ex)
 {/*{{{*/
 
     $log = config('log');
