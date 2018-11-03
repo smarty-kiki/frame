@@ -258,14 +258,23 @@ function db_simple_where_sql(array $wheres)
 
     foreach ($wheres as $column => $value) {
         if (is_array($value)) {
+
             $where_sqls[] = "`$column` in :w_$column";
+            $binds[":w_$column"] = $value;
+        } elseif (is_null($value)) {
+            $column_info = explode(' ', $column);
+            $column = $column_info[0];
+            $symbol = (isset($column_info[1]) && $column_info[1] === 'not')? 'is not': 'is';
+
+            $where_sqls[] = "`$column` $symbol null";
         } else {
             $column_info = explode(' ', $column);
             $column = $column_info[0];
             $symbol = isset($column_info[1])? $column_info[1]: '=';
+
             $where_sqls[] = "`$column` $symbol :w_$column";
+            $binds[":w_$column"] = $value;
         }
-        $binds[":w_$column"] = $value;
     }
 
     return [implode(' and ', $where_sqls), $binds];

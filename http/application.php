@@ -245,8 +245,6 @@ function redirect($uri, $forever = false)
     }
 
     header('Location: '.$uri);
-
-    exit;
 }
 
 /**
