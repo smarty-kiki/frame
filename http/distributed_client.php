@@ -23,6 +23,6 @@ function client_call($service_name, $method, $args = [])
     if ($data['res']) {
         return $data['data'];
     } else {
-        throw new $data['exception_class']($data['exception_message']);
+        throw new $data['exception']['class']($data['exception']['message']);
     }
 }

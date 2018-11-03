@@ -100,10 +100,17 @@ function service_data_serialize($data)
 
 function service_ex_serialize($ex)
 {
+    log_exception($ex);
+
     echo serialize([
         'res' => false,
-        'exception_class' => get_class($ex),
-        'exception_message' => $ex->getMessage(),
+        'exception' => [
+            'class' => get_class($ex),
+            'message' => $ex->getMessage(),
+            'code' => $ex->getCode(),
+            'line' => $ex->getLine(),
+            'trace' => $ex->getTraceAsString(),
+        ],
     ]);
     flush();
     exit;
