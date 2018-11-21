@@ -211,7 +211,7 @@ function array_transfer(array $array, array $rules)
     $values = [];
 
     foreach ($rules as $from => $to) {
-        $values[$to] = array_get($array, $from);
+        array_set($values, $to, array_get($array, $from));
     }
 
     return $values;

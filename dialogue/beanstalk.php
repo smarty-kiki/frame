@@ -369,6 +369,7 @@ function dialogue_topic_match_extension_action(closure $action = null)
 /**
  * tool
  */
+
 function dialogue_topics($topics = null)
 {/*{{{*/
     static $container = [];
@@ -438,6 +439,7 @@ function _dialogue_pull_message($tube, $timeout = null, $config_key = 'default')
 /**
  * dispatch
  */
+
 function _dialogue_waiting_user_tubes($user_id)
 {/*{{{*/
     $tubes = cache_keys(DIALOGUE_WAITING_USER_TUBE_PREFIX.$user_id.'_*');

@@ -72,8 +72,9 @@ function _mongodb_database_read($config_key, $table, Query $query)
 {/*{{{*/
     return _mongodb_database_closure($config_key, function ($connection, $config) use ($table, $query) {
 
-        return $connection->executeQuery(__mongodb_dbc($config['database'], $table), $query);
+        $cursor = $connection->executeQuery(__mongodb_dbc($config['database'], $table), $query);
 
+        return $cursor->toArray();
     });
 }/*}}}*/
 
@@ -110,14 +111,9 @@ function storage_query($table, array $selections = [],  array $queries = [], arr
         "limit" => $limit,
     ]);
 
-    $results = _mongodb_database_read($config_key, $table, $query);
+    $res = _mongodb_database_read($config_key, $table, $query);
 
-    $res = [];
-    foreach ($results as $result) {
-        $res[] = (array) $result;
-    }
-
-    return $res;
+    return json_decode(json_encode($res), true);
 }/*}}}*/
 
 function storage_find($table, $id, $config_key = 'default')
