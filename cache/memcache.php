@@ -1,9 +1,33 @@
 <?php
 
-/**
- *   todo
- *   close
- */
+function _memcache_connection(array $config)
+{/*{{{*/
+    static $container = [];
+
+    if (empty($config)) {
+
+        foreach ($container as $connection) {
+
+            memcache_close($connection);
+        }
+
+        return $container = [];
+    } else {
+
+        $sign = $config['host'] . $config['port'];
+
+        if (empty($container[$sign])) {
+
+            $connection = memcache_connect($config['host'], $config['port']);
+
+            $container[$sign] = $connection;
+        } else {
+            $connection = $container[$sign];
+        }
+
+        return $connection;
+    }
+}/*}}}*/
 
 function _memcache_cache_closure($config_key, closure $closure)
 {/*{{{*/
@@ -13,15 +37,9 @@ function _memcache_cache_closure($config_key, closure $closure)
         $config = config('memcache');
     }
 
-    $connection_config = $config[$config_key];
+    $connection = _memcache_connection($config[$config_key]);
 
-    $connection = memcache_connect($connection_config['ip'], $connection_config['port']);
-
-    $res = call_user_func($closure, $connection);
-
-    memcache_close($connection);
-
-    return $res;
+    return call_user_func($closure, $connection);
 }/*}}}*/
 
 function cache_get($key, $config_key = 'default')
@@ -117,4 +135,5 @@ function cache_decrement($key, $number = 1, $expires = 86400, $config_key = 'def
 
 function cache_close()
 {/*{{{*/
+    return _memcache_connection([]);
 }/*}}}*/
