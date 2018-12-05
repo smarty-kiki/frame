@@ -258,8 +258,11 @@ function db_simple_where_sql(array $wheres)
 
     foreach ($wheres as $column => $value) {
         if (is_array($value)) {
+            $column_info = explode(' ', $column);
+            $column = $column_info[0];
+            $symbol = (isset($column_info[1]) && $column_info[1] === 'not')? 'not in': 'in';
 
-            $where_sqls[] = "`$column` in :w_$column";
+            $where_sqls[] = "`$column` $symbol :w_$column";
             $binds[":w_$column"] = $value;
         } elseif (is_null($value)) {
             $column_info = explode(' ', $column);
