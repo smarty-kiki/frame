@@ -446,19 +446,61 @@ function spider_job_push($job_name, $url = null)
 /**
  *  common
  */
-
-function spider_job(string $job_name, string $cron_string, string $url, array $spider_rule, $priority = 10, $retry = [], $config_key = 'default')
+function _spider_job(
+    string $cron_string,
+    string $url,
+    string $method,
+    array  $data,
+    array  $spider_rule,
+    int    $priority,
+    array  $retry,
+    string $config_key
+)
 {/*{{{*/
-    $jobs = spider_jobs();
-
-    $jobs[$job_name] = [
+    return [
         'cron_string' => $cron_string,
         'url' => $url,
+        'method' => $method,
+        'data' => $data,
         'rule' => $spider_rule,
         'priority' => $priority,
         'retry' => $retry,
         'config_key' => $config_key,
     ];
+}/*}}}*/
+
+function spider_job_get(string $job_name, string $cron_string, string $url, array $spider_rule, $priority = 10, $retry = [], $config_key = 'default')
+{/*{{{*/
+    $jobs = spider_jobs();
+
+    $jobs[$job_name] = _spider_job(
+        $cron_string,
+        $url,
+        'get',
+        [],
+        $spider_rule,
+        $priority,
+        $retry,
+        $config_key
+    );
+
+    spider_jobs($jobs);
+}/*}}}*/
+
+function spider_job_post(string $job_name, string $cron_string, string $url, array $data, array $spider_rule, $priority = 10, $retry = [], $config_key = 'default')
+{/*{{{*/
+    $jobs = spider_jobs();
+
+    $jobs[$job_name] = _spider_job(
+        $cron_string,
+        $url,
+        'post',
+        $data,
+        $spider_rule,
+        $priority,
+        $retry,
+        $config_key
+    );
 
     spider_jobs($jobs);
 }/*}}}*/
@@ -554,7 +596,7 @@ function spider_watch($config_key = 'default', $memory_limit = 1048576)
     }
 }/*}}}*/
 
-function spider_run($url, array $spider_rule)
+function spider_run($url, $method, $data, array $spider_rule)
 {/*{{{*/
 
     $remote_info = remote_get($url, 10);

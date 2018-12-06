@@ -372,11 +372,11 @@ function db_simple_query_indexed($table, $indexed, array $wheres, $option_sql = 
     return $res;
 }/*}}}*/
 
-function db_simple_query_value($value, $table, array $wheres, $config_key = 'default')
+function db_simple_query_value($table, $value, array $wheres, $option_sql = '', $config_key = 'default')
 {/*{{{*/
-  list($where, $binds) = db_simple_where_sql($wheres);
+    list($where, $binds) = db_simple_where_sql($wheres);
 
-  $row = db_query_value($value, "select `$value` from `$table` where $where", $binds, $config_key);
+    $row = db_query_value($value, "select `$value` from `$table` where $where $option_sql", $binds, $config_key);
 
-  return $row[$value];
+    return $row[$value];
 }/*}}}*/
