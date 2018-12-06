@@ -30,4 +30,4 @@ function db_simple_delete($table, array $wheres, $config_key = 'default') {}
 function db_simple_query($table, array $wheres, $option_sql = 'order by id', $config_key = 'default') {}
 function db_simple_query_first($table, array $wheres, $option_sql = '', $config_key = 'default') {}
 function db_simple_query_indexed($table, $indexed, array $wheres, $option_sql = 'order by id', $config_key = 'default') {}
-function db_simple_query_value($value, $table, array $wheres, $config_key = 'default') {}
+function db_simple_query_value($table, $value, array $wheres, $option_sql = '', $config_key = 'default') {}
