@@ -25,9 +25,9 @@ function is_https()
  */
 function uri()
 {
-    $url = is_https() ? 'https://' : 'http://';
+    $schema = is_https() ? 'https://' : 'http://';
 
-    return $url.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
+    return $schema.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
 }
 
 /**
