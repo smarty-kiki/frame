@@ -42,6 +42,7 @@ function uri_info($name = null)
     static $container = [];
 
     if (empty($container)) {
+
         $url = uri();
 
         $container = parse_url($url);
@@ -66,6 +67,7 @@ function route($rule)
     $args = [];
 
     if ($matched = !empty($matches[0])) {
+
         unset($matches[0]);
 
         foreach ($matches as $v) {
@@ -330,11 +332,6 @@ function input_json($name, $default = null)
     return array_get($post_data, $name, $default);
 }
 
-function input_post_raw()
-{/*{{{*/
-    return file_get_contents('php://input');
-}/*}}}*/
-
 /**
  * Get items from Json Decode _POST using "dot" notation.
  * 
@@ -355,6 +352,11 @@ function input_json_list(...$names)
 
     return $values;
 }
+
+function input_post_raw()
+{/*{{{*/
+    return file_get_contents('php://input');
+}/*}}}*/
 
 /**
  * Get specified cookie without filte XSS.
