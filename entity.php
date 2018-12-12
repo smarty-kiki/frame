@@ -11,6 +11,7 @@ abstract class entity implements JsonSerializable, Serializable
     public $update_time;
     public $delete_time;
 
+    private $just_deleted;
     private $is_force_deleted;
 
     public $structs = [];
@@ -65,8 +66,14 @@ abstract class entity implements JsonSerializable, Serializable
         return ! is_null($this->delete_time);
     }
 
+    final public function just_deleted()
+    {
+        return $this->just_deleted;
+    }
+
     final public function delete()
     {
+        $this->just_deleted = true;
         $this->delete_time = datetime();
     }
 
