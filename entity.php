@@ -12,7 +12,7 @@ abstract class entity implements JsonSerializable, Serializable
     public $delete_time;
 
     private $just_deleted;
-    private $is_force_deleted;
+    private $just_force_deleted;
 
     public $structs = [];
     public $attributes = [];
@@ -41,7 +41,7 @@ abstract class entity implements JsonSerializable, Serializable
         $static->delete_time = null;
 
         $static->just_deleted = false;
-        $static->is_force_deleted = false;
+        $static->just_force_deleted = false;
 
         local_cache_set($static);
 
@@ -53,12 +53,12 @@ abstract class entity implements JsonSerializable, Serializable
         return generate_id(get_called_class());
     }
 
-    final public function is_new()
+    final public function just_new()
     {
         return self::INIT_VERSION === $this->version;
     }
 
-    final public function is_updated()
+    final public function just_updated()
     {
         return $this->attributes != $this->structs;
     }
@@ -84,14 +84,14 @@ abstract class entity implements JsonSerializable, Serializable
         $this->delete_time = null;
     }
 
-    final public function is_force_deleted()
+    final public function just_force_deleted()
     {
-        return $this->is_force_deleted;
+        return $this->just_force_deleted;
     }
 
     final public function force_delete()
     {
-        $this->is_force_deleted = true;
+        $this->just_force_deleted = true;
     }
 
     public function is_null()

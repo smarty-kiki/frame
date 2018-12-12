@@ -42,13 +42,13 @@ function unit_of_work(Closure $action)
             continue;
         }
 
-        if ($entity->is_force_deleted()) {
-            if (!$entity->is_new()) {
+        if ($entity->just_force_deleted()) {
+            if (!$entity->just_new()) {
                 $sqls[] = $dao->dump_delete_sql($entity);
             }
-        } elseif ($entity->is_new()) {
+        } elseif ($entity->just_new()) {
             $sqls[] = $dao->dump_insert_sql($entity);
-        } elseif ($entity->is_updated() || $entity->just_deleted()) {
+        } elseif ($entity->just_updated() || $entity->just_deleted()) {
             $sqls[] = $dao->dump_update_sql($entity);
         }
     }
