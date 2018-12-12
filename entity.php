@@ -37,9 +37,11 @@ abstract class entity implements JsonSerializable, Serializable
         $static->attributes = $static->structs;
         $static->id = self::generate_id();
         $static->version = self::INIT_VERSION;
-        $static->is_force_deleted = false;
         $static->create_time = $static->update_time = datetime();
         $static->delete_time = null;
+
+        $static->just_deleted = false;
+        $static->is_force_deleted = false;
 
         local_cache_set($static);
 
