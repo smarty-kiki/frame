@@ -53,8 +53,6 @@ function array_set(&$array, $key, $value)
     }
 
     $array[array_shift($keys)] = $value;
-
-    return $array;
 }/*}}}*/
 
 /**
