@@ -124,7 +124,7 @@ function storage_query($table, array $selections = [],  array $queries = [], arr
 
 function storage_find($table, $id, $config_key = 'default')
 {/*{{{*/
-    return storage_query(
+    $datas = storage_query(
         $table,
         $selections = [],
         $queries = [
@@ -135,6 +135,8 @@ function storage_find($table, $id, $config_key = 'default')
         $limit = 1,
         $config_key
     );
+
+    return reset($datas);
 }/*}}}*/
 
 function storage_update($table, array $queries = [], array $new_data, $config_key = 'default')
