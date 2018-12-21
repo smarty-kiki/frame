@@ -104,8 +104,14 @@ function storage_multi_insert($table, array $datas, $config_key = 'default')
 
 function storage_query($table, array $selections = [],  array $queries = [], array $sorts = [], $offset = 0, $limit = 1000, $config_key = 'default')
 {/*{{{*/
+    $projection = ['_id' => 0];
+
+    foreach ($selections as $selection) {
+        $projection[$selection] = 1;
+    }
+
     $query = new Query($queries, [
-        'projection' => $selections,
+        'projection' => $projection,
         "sort" => $sorts,
         "skip" => $offset,
         "limit" => $limit,

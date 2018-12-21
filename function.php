@@ -1,12 +1,5 @@
 <?php
 
-/**
- * @param array  $array
- * @param string $key
- * @param mixed  $default
- *
- * @return mixed
- */
 function array_get($array, $key, $default = null)
 {/*{{{*/
     if (is_null($key)) {
@@ -24,16 +17,6 @@ function array_get($array, $key, $default = null)
     return $array;
 }/*}}}*/
 
-/**
- * Set an array item to a given value using "dot" notation.
- * If no key is given to the method, the entire array will be replaced.
- *
- * @param array  $array
- * @param string $key
- * @param mixed  $value
- *
- * @return array
- */
 function array_set(&$array, $key, $value)
 {/*{{{*/
     if (is_null($key)) {
@@ -55,14 +38,6 @@ function array_set(&$array, $key, $value)
     $array[array_shift($keys)] = $value;
 }/*}}}*/
 
-/**
- * array_exists
- *
- * @param mixed $array
- * @param mixed $key
- * @access public
- * @return void
- */
 function array_exists($array, $key)
 {/*{{{*/
     if (is_null($key)) {
@@ -80,14 +55,6 @@ function array_exists($array, $key)
     return true;
 }/*}}}*/
 
-/**
- * Fetch a flattened array of a nested array element.
- *
- * @param array  $array
- * @param string $key
- *
- * @return array
- */
 function array_fetch($array, $key)
 {/*{{{*/
     foreach (explode('.', $key) as $segment) {
@@ -105,12 +72,6 @@ function array_fetch($array, $key)
     return array_values($results);
 }/*}}}*/
 
-/**
- * Remove one or many array items from a given array using "dot" notation.
- *
- * @param array        $array
- * @param array|string $keys
- */
 function array_forget(&$array, $keys)
 {/*{{{*/
     $original = &$array;
@@ -128,31 +89,15 @@ function array_forget(&$array, $keys)
 
         unset($array[array_shift($parts)]);
 
-        // clean up after each pass
         $array = &$original;
     }
 }/*}}}*/
 
-/**
- * Divide an array into two arrays. One with keys and the other with values.
- *
- * @param array $array
- *
- * @return array
- */
 function array_divide($array)
 {/*{{{*/
     return array(array_keys($array), array_values($array));
 }/*}}}*/
 
-/**
- * Build a new array using a callback.
- *
- * @param array    $array
- * @param \Closure $callback
- *
- * @return array
- */
 function array_build($array, Closure $callback)
 {/*{{{*/
     $results = [];
@@ -166,13 +111,6 @@ function array_build($array, Closure $callback)
     return $results;
 }/*}}}*/
 
-/**
- * 递归ksort数组.
- *
- * @param array    $array
- *
- * @return array
- */
 function array_key_sort($array)
 {/*{{{*/
     ksort($array);
@@ -185,16 +123,16 @@ function array_key_sort($array)
     return $array;
 }/*}}}*/
 
-function array_list(array $array, array $names)
+function array_list(array $array, array $keys)
 {/*{{{*/
-    if (empty($names)) {
+    if (empty($keys)) {
         return [];
     }
 
     $values = [];
 
-    foreach ($names as $name) {
-        $values[] = array_get($array, $name);
+    foreach ($keys as $key) {
+        $values[] = array_get($array, $key);
     }
 
     return $values;
@@ -213,40 +151,6 @@ function array_transfer(array $array, array $rules)
     }
 
     return $values;
-}/*}}}*/
-
-/**
- * sort an indexed array by value first, and then by key.
- *
- * @param array $array  排序数组
- * @param bool  $valrev value DESC or ASC
- * @param bool  $keyrev key DESC or ASC
- *
- * @return sort_array
- */
-function aksort(&$array, $valrev = false, $keyrev = false)
-{/*{{{*/
-    $sort_array = [];
-    if ($valrev) {
-        arsort($array);
-    } else {
-        asort($array);
-    }
-    $vals = array_count_values($array);
-    $i = 0;
-    foreach ($vals as $val => $num) {
-        $tmp = array_slice($array, $i, $num, true);
-        if ($keyrev) {
-            krsort($tmp);
-        } else {
-            ksort($tmp);
-        }
-        $sort_array += $tmp;
-        unset($tmp);
-        $i += $num;
-    }
-
-    return $sort_array;
 }/*}}}*/
 
 /**
