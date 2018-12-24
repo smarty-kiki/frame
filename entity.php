@@ -81,6 +81,7 @@ abstract class entity implements JsonSerializable, Serializable
 
     final public function restore()
     {
+        $this->just_deleted = false;
         $this->delete_time = null;
     }
 
