@@ -554,14 +554,14 @@ class dao
 
     public function count()
     {/*{{{*/
-        $sql = 'select count(*) as count from '.$this->table_name;
+        $sql = 'select count(*) as count from `'.$this->table_name.'`';
 
         return db_query_value('count', $sql, [], $this->db_config_key);
     }/*}}}*/
 
     protected function count_by_condition($condition, array $binds = [])
     {/*{{{*/
-        $sql = 'select count(*) as count from '.$this->table_name.' where '.$condition;
+        $sql = 'select count(*) as count from `'.$this->table_name.'` where '.$condition;
 
         return db_query_value('count', $sql, $binds, $this->db_config_key);
     }/*}}}*/
