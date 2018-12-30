@@ -422,7 +422,7 @@ function spider_trigger()
 
 function spider_job_push($job_name, $url = null, $data = [])
 {/*{{{*/
-    $job = spider_job_pickup($job_name);
+    $job = _spider_job_pickup($job_name);
 
     $fp = _beanstalk_connection($job['config_key']);
 
@@ -531,7 +531,7 @@ function spider_jobs($jobs = null)
     return $container = $jobs;
 }/*}}}*/
 
-function spider_job_pickup($job_name)
+function _spider_job_pickup($job_name)
 {/*{{{*/
     $jobs = spider_jobs();
 
@@ -576,7 +576,7 @@ function spider_watch($config_key = 'default', $memory_limit = 1048576)
         $data = $body['data'];
         $retry = $body['retry'];
 
-        $job = spider_job_pickup($job_name);
+        $job = _spider_job_pickup($job_name);
 
         $res = [];
 
