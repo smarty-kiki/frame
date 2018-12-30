@@ -420,7 +420,7 @@ function spider_trigger()
     }
 }/*}}}*/
 
-function spider_job_push($job_name, $url = null)
+function spider_job_push($job_name, $url = null, $data = [])
 {/*{{{*/
     $job = spider_job_pickup($job_name);
 
@@ -436,6 +436,7 @@ function spider_job_push($job_name, $url = null)
         serialize([
             'job_name' => $job_name,
             'url' => $url,
+            'data' => $data,
             'retry' => 0
         ])
     );
@@ -450,18 +451,26 @@ function _spider_job(
     string $cron_string,
     string $url,
     string $method,
-    array  $data,
+           $data,
+    string $format,
     array  $spider_rule,
     int    $priority,
     array  $retry,
     string $config_key
 )
 {/*{{{*/
+    otherwise(array_key_exists($format, [
+        'json' => true,
+        'html' => true,
+        'xml' => true,
+    ]));
+
     return [
         'cron_string' => $cron_string,
         'url' => $url,
         'method' => $method,
         'data' => $data,
+        'format' => $format,
         'rule' => $spider_rule,
         'priority' => $priority,
         'retry' => $retry,
@@ -469,15 +478,18 @@ function _spider_job(
     ];
 }/*}}}*/
 
-function spider_job_get(string $job_name, string $cron_string, string $url, array $spider_rule, $priority = 10, $retry = [], $config_key = 'default')
+function spider_job_get(string $job_name, string $cron_string, string $url, string $format, array $spider_rule, $priority = 10, $retry = [], $config_key = 'default')
 {/*{{{*/
     $jobs = spider_jobs();
+
+    otherwise(! array_key_exists($job_name, $jobs), "spider job [$job_name] already exists");
 
     $jobs[$job_name] = _spider_job(
         $cron_string,
         $url,
         'get',
         [],
+        $format,
         $spider_rule,
         $priority,
         $retry,
@@ -487,15 +499,18 @@ function spider_job_get(string $job_name, string $cron_string, string $url, arra
     spider_jobs($jobs);
 }/*}}}*/
 
-function spider_job_post(string $job_name, string $cron_string, string $url, array $data, array $spider_rule, $priority = 10, $retry = [], $config_key = 'default')
+function spider_job_post(string $job_name, string $cron_string, string $url, $data, string $format, array $spider_rule, $priority = 10, $retry = [], $config_key = 'default')
 {/*{{{*/
     $jobs = spider_jobs();
+
+    otherwise(! array_key_exists($job_name, $jobs), "spider job [$job_name] already exists");
 
     $jobs[$job_name] = _spider_job(
         $cron_string,
         $url,
         'post',
         $data,
+        $format,
         $spider_rule,
         $priority,
         $retry,
@@ -558,13 +573,25 @@ function spider_watch($config_key = 'default', $memory_limit = 1048576)
 
         $job_name = $body['job_name'];
         $url = $body['url'];
+        $data = $body['data'];
         $retry = $body['retry'];
 
         $job = spider_job_pickup($job_name);
 
-        $res = spider_run($url?:$job['url'], $job['rule'], $config_key);
+        $res = [];
+
+        if ('get' == $job['method']) {
+
+            $res = spider_run_get($url?:$job['url'], $job['format'], $job['rule']);
+        } else {
+
+            $res = spider_run_post($url?:$job['url'], $data?:$job['data'], $job['format'], $job['rule']);
+        }
 
         if ($res) {
+
+            $res['create_time'] = datetime();
+
             storage_insert($job_name, $res, $config_key);
 
             _beanstalk_delete($fp, $id);
@@ -596,22 +623,47 @@ function spider_watch($config_key = 'default', $memory_limit = 1048576)
     }
 }/*}}}*/
 
-function spider_run($url, $method, $data, array $spider_rule)
+function _spider_transfer_result($result, $format, array $spider_rule)
 {/*{{{*/
+    $result_arr = [];
 
-    $remote_info = remote_get($url, 10);
+    if ($result) {
 
-    if ($remote_arr = json_decode($remote_info, true)) { 
+        switch ($format) {
 
-        $res_arr = array_transfer($remote_arr, $spider_rule);
+            case 'json':
 
-        $res_arr['create_time'] = datetime();
+                $result_arr = json_decode($result, true);
 
-        return $res_arr;
+                return array_transfer($result_arr, $spider_rule);
 
-    } else {
+                break;
 
+            case 'xml':
+
+                $obj = simplexml_load_string($result);
+
+                $result_arr = json_decode(json_encode($obj), true);
+
+                return array_transfer($result_arr, $spider_rule);
+
+                break;
+        }
     }
+}/*}}}*/
+
+function spider_run_get($url, string $format, array $spider_rule)
+{/*{{{*/
+    $result = remote_get($url, 30);
+
+    return _spider_transfer_result($result, $format, $spider_rule);
+}/*}}}*/
+
+function spider_run_post($url, $data, string $format, array $spider_rule)
+{/*{{{*/
+    $result = remote_post($url, $data, 30);
+
+    return _spider_transfer_result($result, $format, $spider_rule);
 }/*}}}*/
 
 /**
