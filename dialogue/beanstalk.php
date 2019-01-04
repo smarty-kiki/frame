@@ -412,6 +412,9 @@ function dialogue_topic_match($content, $topic)
 function _dialogue_pull_message($tube, $timeout = null, $config_key = 'default')
 {/*{{{*/
     $fp = _beanstalk_connection($config_key);
+
+    _beanstalk_ignore($fp, 'default');
+
     _beanstalk_watch($fp, $tube);
 
     $job_instance = _beanstalk_reserve($fp, $timeout);
@@ -490,6 +493,8 @@ function _dialogue_push($user_id, $content, $tube, $is_sync = false, $delay = 0,
 function _dialogue_push_message($message, $tube, $delay = 0, $priority = 10, $config_key = 'default')
 {/*{{{*/
     $fp = _beanstalk_connection($config_key);
+
+    _beanstalk_ignore($fp, 'default');
 
     _beanstalk_use_tube($fp, $tube);
 
