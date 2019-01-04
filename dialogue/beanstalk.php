@@ -425,6 +425,7 @@ function _dialogue_pull_message($tube, $timeout = null, $config_key = 'default')
     $id = $job_instance['id'];
 
     _beanstalk_delete($fp, $id);
+    _beanstalk_watch($fp, 'default');
     _beanstalk_ignore($fp, $tube);
 
     $message = unserialize($job_instance['body']);
