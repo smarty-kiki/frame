@@ -641,7 +641,7 @@ function _spider_transfer_result($result, $format, array $spider_rule)
 
             case 'xml':
 
-                $obj = simplexml_load_string($result);
+                $obj = simplexml_load_string($result, 'SimpleXMLElement', LIBXML_NOCDATA);
 
                 $result_arr = json_decode(json_encode($obj), true);
 
