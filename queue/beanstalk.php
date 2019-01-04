@@ -390,6 +390,11 @@ function queue_watch($tube = 'default', $config_key = 'default', $memory_limit =
 
     _beanstalk_watch($fp, $tube);
 
+    if ($tube !== 'default') {
+
+        _beanstalk_ignore($fp, 'default');
+    }
+
     for (;;) {
 
         if (memory_get_usage(true) > $memory_limit) {
