@@ -9,6 +9,11 @@ define('DIALOGUE_PUSH_SYNC_USER_TUBE_PREFIX', 'dialogue_push_sync_');
  * beanstalk
  */
 
+function _beanstalk_error($error)
+{/*{{{*/
+    throw new Exception($error);
+}/*}}}*/
+
 function _beanstalk_connection($config_key)
 {/*{{{*/
     static $configs = [];
@@ -191,7 +196,7 @@ function _beanstalk_ignore($fp, $tube)
         return (integer) strtok(' ');
     case 'NOT_IGNORED':
     default:
-    $this->_error($status);
+    _beanstalk_error($status);
     return false;
     }
 }/*}}}*/
