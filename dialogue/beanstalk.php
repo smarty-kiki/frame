@@ -643,6 +643,8 @@ function dialogue_watch($config_key = 'default', $memory_limit = 1048576)
 
         $message = _dialogue_pull_message(DIALOGUE_POOL_TUBE, null, $config_key);
 
+        /**kiki*/error_log(strip_tags(print_r($message, true))."\n", 3, "/tmp/error_user.log");
+
         $user_id = $message['user_id'];
         $content = $message['content'];
         $time = $message['time'];
