@@ -70,8 +70,8 @@ function _beanstalk_put($fp, $priority, $delay, $run_time, $data)
     case 'EXPECTED_CRLF':
     case 'JOB_TOO_BIG':
     default:
-    throw new Exception($status);
-    return false;
+        _beanstalk_error($status);
+        return false;
     }
 }/*}}}*/
 
@@ -84,7 +84,7 @@ function _beanstalk_use_tube($fp, $tube)
     case 'USING':
         return strtok(' ');
     default:
-        throw new Exception($status);
+        _beanstalk_error($status);
         return false;
     }
 }/*}}}*/
@@ -107,8 +107,8 @@ function _beanstalk_reserve($fp, $timeout = null)
     case 'DEADLINE_SOON':
     case 'TIMED_OUT':
     default:
-    throw new Exception($status);
-    return false;
+        _beanstalk_error($status);
+        return false;
     }
 }/*}}}*/
 
@@ -122,8 +122,8 @@ function _beanstalk_delete($fp, $id)
         return true;
     case 'NOT_FOUND':
     default:
-    throw new Exception($status);
-    return false;
+        _beanstalk_error($status);
+        return false;
     }
 }/*}}}*/
 
@@ -138,8 +138,8 @@ function _beanstalk_release($fp, $id, $priority, $delay)
         return true;
     case 'NOT_FOUND':
     default:
-    throw new Exception($status);
-    return false;
+        _beanstalk_error($status);
+        return false;
     }
 }/*}}}*/
 
@@ -153,8 +153,8 @@ function _beanstalk_bury($fp, $id, $priority = 10)
         return true;
     case 'NOT_FOUND':
     default:
-    throw new Exception($status);
-    return false;
+        _beanstalk_error($status);
+        return false;
     }
 }/*}}}*/
 
@@ -168,8 +168,8 @@ function _beanstalk_touch($fp, $id)
         return true;
     case 'NOT_TOUCHED':
     default:
-    throw new Exception($status);
-    return false;
+        _beanstalk_error($status);
+        return false;
     }
 }/*}}}*/
 
@@ -182,7 +182,7 @@ function _beanstalk_watch($fp, $tube)
     case 'WATCHING':
         return (integer) strtok(' ');
     default:
-        throw new Exception($status);
+        _beanstalk_error($status);
         return false;
     }
 }/*}}}*/
@@ -212,8 +212,8 @@ function _beanstalk_peek_read($fp)
         ];
     case 'NOT_FOUND':
     default:
-    throw new Exception($status);
-    return false;
+        _beanstalk_error($status);
+        return false;
     }
 }/*}}}*/
 
@@ -249,7 +249,7 @@ function _beanstalk_kick($fp, $bound)
     case 'KICKED':
         return (integer) strtok(' ');
     default:
-        throw new Exception($status);
+        _beanstalk_error($status);
         return false;
     }
 }/*}}}*/
@@ -263,8 +263,8 @@ function _beanstalk_kick_job($fp, $id)
         return true;
     case 'NOT_FOUND':
     default:
-    throw new Exception($status);
-    return false;
+        _beanstalk_error($status);
+        return false;
     }
 }/*}}}*/
 
@@ -275,7 +275,7 @@ function _beanstalk_stats_read($fp)
     case 'OK':
         return _beanstalk_connection_read($fp);
     default:
-        throw new Exception($status);
+        _beanstalk_error($status);
         return false;
     }
 }/*}}}*/
@@ -312,7 +312,7 @@ function _beanstalk_list_tube_used($fp)
     case 'USING':
         return strtok(' ');
     default:
-        throw new Exception($status);
+        _beanstalk_error($status);
         return false;
     }
 }/*}}}*/
@@ -418,7 +418,8 @@ function _dialogue_pull_message($tube, $timeout = null, $config_key = 'default')
 {/*{{{*/
     $fp = _beanstalk_connection($config_key);
 
-    _beanstalk_ignore($fp, 'default');
+    $tmp = _beanstalk_list_tube_used($fp);
+    /**kiki*/error_log(strip_tags(print_r($tmp, true))."\n", 3, "/tmp/error_user.log");
 
     _beanstalk_watch($fp, $tube);
 
@@ -499,7 +500,8 @@ function _dialogue_push_message($message, $tube, $delay = 0, $priority = 10, $co
 {/*{{{*/
     $fp = _beanstalk_connection($config_key);
 
-    _beanstalk_ignore($fp, 'default');
+    $tmp = _beanstalk_list_tube_used($fp);
+    /**kiki*/error_log(strip_tags(print_r($tmp, true))."\n", 3, "/tmp/error_user.log");
 
     _beanstalk_use_tube($fp, $tube);
 
