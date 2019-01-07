@@ -2,16 +2,39 @@
 
 function array_get($array, $key, $default = null)
 {/*{{{*/
+    $delimiter = '.';
+
     if (is_null($key)) {
+
         return $default;
     }
 
-    foreach (explode('.', $key) as $segment) {
-        if (!is_array($array) || !array_key_exists($segment, $array)) {
-            return value($default);
-        }
+    $exploded_keys = explode($delimiter, $key);
 
-        $array = $array[$segment];
+    foreach ($exploded_keys as $i => $segment) {
+
+        if ('*' === $segment) {
+
+            $res_array = [];
+
+            $new_key = implode($delimiter, array_slice($exploded_keys, $i + 1));
+
+            foreach ($array as $k => $v) {
+
+                $res_array[$k] = array_get($v, $new_key, $default);
+            }
+
+            return $res_array;
+
+        } else {
+
+            if (!is_array($array) || !array_key_exists($segment, $array)) {
+
+                return value($default);
+            }
+
+            $array = $array[$segment];
+        }
     }
 
     return $array;
@@ -57,23 +80,6 @@ function array_exists($array, $key)
     }
 
     return true;
-}/*}}}*/
-
-function array_fetch($array, $key)
-{/*{{{*/
-    foreach (explode('.', $key) as $segment) {
-        $results = [];
-
-        foreach ($array as $value) {
-            $value = (array) $value;
-
-            $results[] = $value[$segment];
-        }
-
-        $array = array_values($results);
-    }
-
-    return array_values($results);
 }/*}}}*/
 
 function array_forget(&$array, $keys)
