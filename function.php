@@ -121,18 +121,6 @@ function array_build($array, Closure $callback)
     return $results;
 }/*}}}*/
 
-function array_key_sort($array)
-{/*{{{*/
-    ksort($array);
-    foreach ($array as $k => $v) {
-        if (is_array($v)) {
-            $array[$k] = array_key_sort($v);
-        }
-    }
-
-    return $array;
-}/*}}}*/
-
 function array_list(array $array, array $keys)
 {/*{{{*/
     if (empty($keys)) {
@@ -163,22 +151,46 @@ function array_transfer(array $array, array $rules)
     return $values;
 }/*}}}*/
 
-/**
- * str_cut
- *
- * @param mixed $string
- * @param mixed $len
- * @param string $suffix
- * @access public
- * @return void
- */
-function str_cut($string, $len, $suffix = '...')
+function str_tail_cut($string, $len, $suffix = '...')
 {/*{{{*/
     $strlen = mb_strlen($string);
     $suffixlen = mb_strlen($suffix);
 
     if ($strlen > $len) {
         return mb_substr($string, 0, $len - $suffixlen) . $suffix;
+    }
+
+    return $string;
+}/*}}}*/
+
+function str_head_cut($string, $len, $prefix = '...')
+{/*{{{*/
+    $strlen = mb_strlen($string);
+    $prefixlen = mb_strlen($prefix);
+
+    if ($strlen > $len) {
+        return $prefix . mb_substr($string, $prefixlen - $len, $len - $prefixlen);
+    }
+
+    return $string;
+}/*}}}*/
+
+function str_middle_cut($string, $len, $middle = '...')
+{/*{{{*/
+    $strlen = mb_strlen($string);
+    $middlelen = mb_strlen($middle);
+
+    $res_strlen = $len - $middlelen;
+
+    if ($res_strlen % 2) {
+        $first_len  = floor($res_strlen / 2);
+        $second_len = ceil($res_strlen / 2);
+    } else {
+        $first_len = $second_len = $res_strlen / 2;
+    }
+
+    if ($strlen > $len) {
+        return mb_substr($string, 0, $first_len) . $middle . mb_substr($string, 0 - $second_len, $second_len);
     }
 
     return $string;
