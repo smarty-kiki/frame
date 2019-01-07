@@ -291,7 +291,7 @@ function config($key)
 
 function env()
 {/*{{{*/
-    return isset($_SERVER['ENV']) ? $_SERVER['ENV'] : 'production';
+    return $_SERVER['ENV'] ?? 'production';
 }/*}}}*/
 
 function is_env($env)

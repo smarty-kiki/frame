@@ -73,7 +73,8 @@ function command_not_found($rule = null, $description = null)
     static $descriptions = [];
 
     if (is_null($rule) && is_null($description)) {
-        exit(call_user_func(if_command_not_found(), $rules, $descriptions));
+        call_user_func(if_command_not_found(), $rules, $descriptions);
+        exit;
     } else {
         $rules[] = $rule;
         $descriptions[] = $description;
