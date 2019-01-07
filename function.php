@@ -196,53 +196,28 @@ function str_middle_cut($string, $len, $middle = '...')
     return $string;
 }/*}}}*/
 
-/**
- * Dump the passed variables and end the script.
- *
- * @param  dynamic  mixed
- */
 function dd(...$args)
 {/*{{{*/
     var_dump(...$args);
     die;
 }/*}}}*/
 
-/**
- * Return the default value of the given value.
- *
- * @param mixed $value
- *
- * @return mixed
- */
 function value($value)
 {/*{{{*/
     return $value instanceof Closure ? $value() : $value;
 }/*}}}*/
 
-/**
- * @param mixed $value
- *
- * @return mixed
- */
 function closure_name($closure)
 {/*{{{*/
     $closure_ref = new ReflectionFunction($closure);
 
-    return $closure_ref->getName();
+    return md5((string) $closure_ref);
 }/*}}}*/
 
-/**
- * Determine if a given string starts with a given substring.
- *
- * @param string       $haystack
- * @param string|array $needles
- *
- * @return bool
- */
 function starts_with($haystack, $needles)
 {/*{{{*/
     foreach ((array) $needles as $needle) {
-        if ($needle != '' && strpos($haystack, $needle) === 0) {
+        if ($needle != '' && mb_strpos($haystack, $needle) === 0) {
             return true;
         }
     }
@@ -250,31 +225,16 @@ function starts_with($haystack, $needles)
     return false;
 }/*}}}*/
 
-/**
- * Determine if a given string ends with a given substring.
- *
- * @param  string  $haystack
- * @param  string|array  $needles
- * @return bool
- */
 function ends_with($haystack, $needles)
 {/*{{{*/
     foreach ((array) $needles as $needle)
     {
-        if ((string) $needle === substr($haystack, -strlen($needle))) return true;
+        if ((string) $needle === mb_substr($haystack, - mb_strlen($needle))) return true;
     }
 
     return false;
 }/*}}}*/
 
-/**
- * Cap a string with a single instance of a given value.
- *
- * @param string $value
- * @param string $cap
- *
- * @return string
- */
 function str_finish($value, $cap)
 {/*{{{*/
     $quoted = preg_quote($cap, '/');
@@ -282,13 +242,6 @@ function str_finish($value, $cap)
     return preg_replace('/(?:'.$quoted.')+$/', '', $value).$cap;
 }/*}}}*/
 
-/**
- * Determine if the given path is a valid URL.
- *
- * @param string $path
- *
- * @return bool
- */
 function is_url($path)
 {/*{{{*/
     if (starts_with($path, array('#', '//', 'mailto:', 'tel:'))) {
@@ -298,13 +251,6 @@ function is_url($path)
     return filter_var($path, FILTER_VALIDATE_URL) !== false;
 }/*}}}*/
 
-/**
- * Init configuration from array or file.
- *
- * @param mixed $configs
- *
- * @return mixed
- */
 function config_dir($dir = null)
 {/*{{{*/
     static $container = [];
@@ -316,14 +262,6 @@ function config_dir($dir = null)
     return $container;
 }/*}}}*/
 
-/**
- * Get the specified configuration value.
- *
- * @param string $key
- * @param mixed  $default
- *
- * @return mixed
- */
 function config($key)
 {/*{{{*/
     static $configs = [];
@@ -351,61 +289,26 @@ function config($key)
     return $configs[$key];
 }/*}}}*/
 
-/**
- * env.
- *
- * get the environment
- *
- * @return string
- */
 function env()
 {/*{{{*/
     return isset($_SERVER['ENV']) ? $_SERVER['ENV'] : 'production';
 }/*}}}*/
 
-/**
- * is_env.
- *
- * @param string $env
- *
- * @return bool
- */
 function is_env($env)
 {/*{{{*/
     return env() === $env;
 }/*}}}*/
 
-/**
- * not empty.
- *
- * @param mixed $mixed
- *
- * @return mixed
- */
 function not_empty($mixed)
 {/*{{{*/
     return !empty($mixed);
 }/*}}}*/
 
-/**
- * not null.
- *
- * @param mixed $mixed
- *
- * @return mixed
- */
 function not_null($mixed)
 {/*{{{*/
     return !is_null($mixed);
 }/*}}}*/
 
-/**
- * all empty.
- *
- * @param mixed $mixed
- *
- * @return mixed
- */
 function all_empty(...$args)
 {/*{{{*/
     foreach ($args as $arg) {
@@ -416,25 +319,11 @@ function all_empty(...$args)
     return true;
 }/*}}}*/
 
-/**
- * all not empty.
- *
- * @param mixed $mixed
- *
- * @return mixed
- */
 function all_not_empty(...$args)
 {/*{{{*/
-    return ! has_empty($args);
+    return ! has_empty(...$args);
 }/*}}}*/
 
-/**
- * has empty.
- *
- * @param mixed $mixed
- *
- * @return mixed
- */
 function has_empty(...$args)
 {/*{{{*/
     foreach ($args as $arg) {
@@ -445,14 +334,6 @@ function has_empty(...$args)
     return false;
 }/*}}}*/
 
-/**
- * datetime.
- *
- * @param mixed  $expression
- * @param string $format
- *
- * @return string
- */
 function datetime($expression = null, $format = 'Y-m-d H:i:s')
 {/*{{{*/
     if (is_null($expression)) {
@@ -493,16 +374,6 @@ function datetime_diff($datetime1, $datetime2, $format = '%ts')
     return $res;
 }/*}}}*/
 
-/**
- * remote_post.
- *
- * @param mixed $url
- * @param array $data
- * @param int   $timeout
- * @param int   $retry
- *
- * @return string
- */
 function remote_post($url, $data = [], $timeout = 3, $retry = 3, array $headers = [], array $cookies = [])
 {/*{{{*/
     $ch = curl_init();
@@ -550,15 +421,6 @@ function remote_post_json($url, $data = [], $timeout = 3, $retry = 3, array $hea
     return json_decode(remote_post($url, $data, $timeout, $retry, $headers, $cookies), true);
 }/*}}}*/
 
-/**
- * remote_get.
- *
- * @param mixed $url
- * @param int   $timeout
- * @param int   $retry
- *
- * @return string
- */
 function remote_get($url, $timeout = 3, $retry = 3, array $headers = [], array $cookies = [])
 {/*{{{*/
     $ch = curl_init();
@@ -615,14 +477,6 @@ function instance($class_name)
     return $container[$class_name];
 }/*}}}*/
 
-/**
- * Convert data to json/jsonp.
- *
- * @param array  $data
- * @param string $callback
- *
- * @return string
- */
 function json($data = [])
 {/*{{{*/
     return json_encode($data, JSON_UNESCAPED_UNICODE);
