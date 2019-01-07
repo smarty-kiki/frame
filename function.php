@@ -17,8 +17,10 @@ function array_get($array, $key, $default = null)
     return $array;
 }/*}}}*/
 
-function array_set(&$array, $key, $value)
+function array_set($array, $key, $value)
 {/*{{{*/
+    $res_array = &$array;
+
     if (is_null($key)) {
         return $array = $value;
     }
@@ -36,6 +38,8 @@ function array_set(&$array, $key, $value)
     }
 
     $array[array_shift($keys)] = $value;
+
+    return $res_array;
 }/*}}}*/
 
 function array_exists($array, $key)
@@ -147,7 +151,7 @@ function array_transfer(array $array, array $rules)
     $values = [];
 
     foreach ($rules as $from => $to) {
-        array_set($values, $to, array_get($array, $from));
+        $values = array_set($values, $to, array_get($array, $from));
     }
 
     return $values;

@@ -196,8 +196,8 @@ function _beanstalk_ignore($fp, $tube)
         return (integer) strtok(' ');
     case 'NOT_IGNORED':
     default:
-    _beanstalk_error($status);
-    return false;
+        _beanstalk_error($status);
+        return false;
     }
 }/*}}}*/
 
