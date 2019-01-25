@@ -207,7 +207,7 @@ function value($value)
     return $value instanceof Closure ? $value() : $value;
 }/*}}}*/
 
-function closure_name($closure)
+function closure_id($closure)
 {/*{{{*/
     $closure_ref = new ReflectionFunction($closure);
 
@@ -313,7 +313,17 @@ function all_empty(...$args)
 {/*{{{*/
     foreach ($args as $arg) {
 
-        if (!empty($arg)) return false;
+        if (not_empty($arg)) return false;
+    }
+
+    return true;
+}/*}}}*/
+
+function all_null(...$args)
+{/*{{{*/
+    foreach ($args as $arg) {
+
+        if (not_null($arg)) return false;
     }
 
     return true;
@@ -324,11 +334,26 @@ function all_not_empty(...$args)
     return ! has_empty(...$args);
 }/*}}}*/
 
+function all_not_null(...$args)
+{/*{{{*/
+    return ! has_null(...$args);
+}/*}}}*/
+
 function has_empty(...$args)
 {/*{{{*/
     foreach ($args as $arg) {
 
         if (empty($arg)) return true;
+    }
+
+    return false;
+}/*}}}*/
+
+function has_null(...$args)
+{/*{{{*/
+    foreach ($args as $arg) {
+
+        if (is_null($arg)) return true;
     }
 
     return false;
