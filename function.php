@@ -446,6 +446,15 @@ function remote_post_json($url, $data = [], $timeout = 3, $retry = 3, array $hea
     return json_decode(remote_post($url, $data, $timeout, $retry, $headers, $cookies), true);
 }/*}}}*/
 
+function remote_post_xml($url, $data = [], $timeout = 3, $retry = 3, array $headers = [], array $cookies = [])
+{/*{{{*/
+    $raw_res = remote_post($url, $data, $timeout, $retry, $headers, $cookies);
+
+    $raw_xml = simplexml_load_string($raw_res, 'SimpleXMLElement', LIBXML_NOCDATA);
+
+    return json_decode(json_encode($raw_xml), true);
+}/*}}}*/
+
 function remote_get($url, $timeout = 3, $retry = 3, array $headers = [], array $cookies = [])
 {/*{{{*/
     $ch = curl_init();
@@ -489,6 +498,15 @@ function remote_get($url, $timeout = 3, $retry = 3, array $headers = [], array $
 function remote_get_json($url, $timeout = 3, $retry = 3, array $headers = [], array $cookies = [])
 {/*{{{*/
     return json_decode(remote_get($url, $timeout, $retry, $headers, $cookies), true);
+}/*}}}*/
+
+function remote_get_xml($url, $timeout = 3, $retry = 3, array $headers = [], array $cookies = [])
+{/*{{{*/
+    $raw_res = remote_get($url, $timeout, $retry, $headers, $cookies);
+
+    $raw_xml = simplexml_load_string($raw_res, 'SimpleXMLElement', LIBXML_NOCDATA);
+
+    return json_decode(json_encode($raw_xml), true);
 }/*}}}*/
 
 function instance($class_name)

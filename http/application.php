@@ -315,9 +315,9 @@ function input_list(...$names)
 
 /**
  * Get an item from Json Decode _POST using "dot" notation.
- * 
- * @param mixed $name 
- * @param mixed $default 
+ *
+ * @param mixed $name
+ * @param mixed $default
  * @access public
  * @return mix
  */
@@ -334,7 +334,7 @@ function input_json($name, $default = null)
 
 /**
  * Get items from Json Decode _POST using "dot" notation.
- * 
+ *
  * @access public
  * @return array
  */
@@ -348,6 +348,41 @@ function input_json_list(...$names)
 
     foreach ($names as $name) {
         $values[] = input_json($name);
+    }
+
+    return $values;
+}
+
+function input_xml($name, $default = null)
+{
+    static $post_data = null;
+
+    if (is_null($post_data)) {
+
+        $raw_post_data = simplexml_load_string(input_post_raw(), 'SimpleXMLElement', LIBXML_NOCDATA);
+
+        $post_data = json_decode(json_encode($raw_post_data), true);
+    }
+
+    return array_get($post_data, $name, $default);
+}
+
+/**
+ * Get items from Json Decode _POST using "dot" notation.
+ *
+ * @access public
+ * @return array
+ */
+function input_xml_list(...$names)
+{
+    if (empty($names)) {
+        return [];
+    }
+
+    $values = [];
+
+    foreach ($names as $name) {
+        $values[] = input_xml($name);
     }
 
     return $values;
