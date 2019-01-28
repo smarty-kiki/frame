@@ -418,7 +418,7 @@ function remote_post($url, $data = [], $timeout = 3, $retry = 3, array $headers 
     }
 
     if ($cookies) {
-        curl_setopt ($ch, CURLOPT_COOKIE, http_build_query($cookies, '', ';').';');
+        curl_setopt($ch, CURLOPT_COOKIE, http_build_query($cookies, '', ';').';');
     }
 
     while ($retry-- > 0) {

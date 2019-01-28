@@ -412,6 +412,39 @@ function cookie_list(...$names)
     return $values;
 }
 
+function server_safe($name, $default = null)
+{
+    if (isset($_COOKIE[$name])) {
+        return filter_input(INPUT_SERVER, $name, FILTER_SANITIZE_SPECIAL_CHARS);
+    }
+
+    return $default;
+}
+
+function server($name, $default = null)
+{
+    if (isset($_SERVER[$name])) {
+        return $_SERVER[$name];
+    }
+
+    return $default;
+}
+
+function server_list(...$names)
+{
+    if (empty($names)) {
+        return [];
+    }
+
+    $values = [];
+
+    foreach ($names as $name) {
+        $values[] = server($name);
+    }
+
+    return $values;
+}
+
 /**
  * Set or get view file path.
  *
