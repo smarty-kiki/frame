@@ -122,7 +122,13 @@ abstract class entity implements JsonSerializable, Serializable
             }
         }
 
-        return array_merge($this->attributes, $this->json_attributes);
+        return array_merge([
+            'id' => $this->id,
+            'version' => $this->version,
+            'create_time' => $this->create_time,
+            'update_time' => $this->update_time,
+            'delete_time' => $this->delete_time,
+        ], $this->attributes, $this->json_attributes);
     }
 
     public function serialize()
@@ -589,6 +595,8 @@ class dao
 
         $entity->id = $rows['id'];
         $entity->version = $rows['version'];
+        $entity->create_time = $rows['create_time'];
+        $entity->update_time = $rows['update_time'];
         $entity->delete_time = $rows['delete_time'];
 
         unset($rows['id']);
