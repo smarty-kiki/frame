@@ -36,7 +36,7 @@ frame
 ├── http (http 入口类功能文件目录)  
 │   ├── application.php (web 能力)  
 │   ├── distributed_client.php (分布式服务 client 能力)  
-│   ├── distributed_service.php (分布式服务 service 能力)  
+│   └── distributed_service.php (分布式服务 service 能力)  
 ├── lock (锁类功能文件目录)  
 │   ├── demo.php  
 │   └── cache.php (使用缓存实现锁)  
