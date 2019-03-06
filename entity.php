@@ -376,15 +376,17 @@ class belongs_to extends relationship_ref
 
     public function batch_load(array $from_entities, $relationship_name)
     {
-        $ids = [];
+        $ids_keys = [];
 
         foreach ($from_entities as $from_entity) {
 
             if ($from_entity instanceof entity && $from_entity->is_not_null()) {
 
-                $ids[] = $from_entity->{$this->foreign_key};
+                $ids_keys[$from_entity->{$this->foreign_key}] = null;
             }
         }
+
+        $ids = array_keys($ids_keys);
 
         $entities = dao($this->entity_name)->find($ids);
 
@@ -909,6 +911,5 @@ function relationship_batch_load($entities, $relationship_chain)
         $entity = reset($entities);
 
         $entities = $entity->relationship_batch_load($relationship, $entities);
-
     }
 }
