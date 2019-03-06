@@ -525,7 +525,7 @@ function instance($class_name, array $args = [])
     if (empty($args)) {
         $instance_identifier = $class_name;
     } else {
-        $instance_identifier = $class_name.md5(serialize($args));
+        $instance_identifier = $class_name.serialize($args);
     }
 
     if (!isset($container[$instance_identifier])) {
