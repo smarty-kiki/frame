@@ -202,6 +202,15 @@ function dd(...$args)
     die;
 }/*}}}*/
 
+function trace($message = 'exception for trace')
+{/*{{{*/
+    try {
+        throw new Exception($message);
+    } catch (Exception $ex) {
+        log_exception($ex);
+    }
+}/*}}}*/
+
 function value($value)
 {/*{{{*/
     return $value instanceof Closure ? $value() : $value;
@@ -509,15 +518,22 @@ function remote_get_xml($url, $timeout = 3, $retry = 3, array $headers = [], arr
     return json_decode(json_encode($raw_xml), true);
 }/*}}}*/
 
-function instance($class_name)
+function instance($class_name, array $args = [])
 {/*{{{*/
     static $container = [];
 
-    if (!isset($container[$class_name])) {
-        $container[$class_name] = new $class_name();
+    if (empty($args)) {
+        $instance_identifier = $class_name;
+    } else {
+        $instance_identifier = $class_name.md5(serialize($args));
     }
 
-    return $container[$class_name];
+    if (!isset($container[$instance_identifier])) {
+
+        $container[$instance_identifier] = new $class_name(...$args);
+    }
+
+    return $container[$instance_identifier];
 }/*}}}*/
 
 function json($data = [])

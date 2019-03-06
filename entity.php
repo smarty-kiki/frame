@@ -223,7 +223,7 @@ abstract class entity implements JsonSerializable, Serializable
             $foreign_key = $self_entity_name.'_id';
         }
 
-        return $this->relationship_refs[$relationship_name] = new has_one($entity_name, $self_entity_name, $foreign_key);
+        return $this->relationship_refs[$relationship_name] = instance('has_one', [$entity_name, $foreign_key]);
     }
 
     protected function belongs_to($relationship_name, $entity_name = null, $foreign_key = null)
@@ -236,7 +236,7 @@ abstract class entity implements JsonSerializable, Serializable
             $foreign_key = $entity_name.'_id';
         }
 
-        return $this->relationship_refs[$relationship_name] = new belongs_to($entity_name, $foreign_key);
+        return $this->relationship_refs[$relationship_name] = instance('belongs_to', [$entity_name, $foreign_key]);
     }
 
     protected function has_many($relationship_name, $entity_name = null, $foreign_key = null)
@@ -251,8 +251,18 @@ abstract class entity implements JsonSerializable, Serializable
             $foreign_key = $self_entity_name.'_id';
         }
 
-        return $this->relationship_refs[$relationship_name] = new has_many($entity_name, $self_entity_name, $foreign_key);
+        return $this->relationship_refs[$relationship_name] = instance('has_many', [$entity_name, $foreign_key]);
     }
+
+    public function relationship_batch_load($relationship_name, array $from_entities)
+    {
+        otherwise(array_key_exists($relationship_name, $this->relationship_refs), 'entity ['.get_class($this).'] has not a relationship called ['.$relationship_name.']');
+
+        $relationship_ref = $this->relationship_refs[$relationship_name];
+
+        return $relationship_ref->batch_load($from_entities, $relationship_name);
+    }
+
 }/*}}}*/
 
 class null_entity extends entity
@@ -285,6 +295,7 @@ class null_entity extends entity
         }
 
         $mock_entity_name = $this->mock_entity_name;
+
         if (! is_null($mock_entity_name)) {
 
             $null_entity_mock_attribute_list = $mock_entity_name::$null_entity_mock_attributes;
@@ -299,20 +310,21 @@ class null_entity extends entity
     }
 }/*}}}*/
 
-interface relationship_ref
+abstract class relationship_ref
 {
     /*{{{*/
-    public function load(entity $from_entity);
-    public function update($values, entity $from_entity);
+    abstract public function load(entity $from_entity);
+    abstract public function batch_load(array $from_entity, $relationship_name);
+    abstract public function update($values, entity $from_entity);
 }/*}}}*/
 
-class has_one implements relationship_ref
+class has_one extends relationship_ref
 {
     /*{{{*/
     private $entity_name;
     private $foreign_key;
 
-    public function __construct($entity_name, $from_entity_name, $foreign_key)
+    public function __construct($entity_name, $foreign_key)
     {
         $this->entity_name = $entity_name;
         $this->foreign_key = $foreign_key;
@@ -323,13 +335,29 @@ class has_one implements relationship_ref
         return dao($this->entity_name)->find_by_foreign_key($this->foreign_key, $from_entity->id);
     }
 
+    public function batch_load(array $from_entities, $relationship_name)
+    {
+        $ids = array_keys($from_entities);
+
+        $entities = dao($this->entity_name)->find_all_by_foreign_keys($this->foreign_key, $ids);
+
+        foreach ($entities as $entity) {
+
+            $from_entity = $from_entities[$entity->{$this->foreign_key}];
+
+            $from_entity->{$relationship_name} = $entity;
+        }
+
+        return $entities;
+    }
+
     public function update($entity, entity $from_entity)
     {
         $entity->{$this->foreign_key} = $from_entity->id;
     }
 }/*}}}*/
 
-class belongs_to implements relationship_ref
+class belongs_to extends relationship_ref
 {
     /*{{{*/
     private $entity_name;
@@ -346,19 +374,44 @@ class belongs_to implements relationship_ref
         return dao($this->entity_name)->find($from_entity->{$this->foreign_key});
     }
 
+    public function batch_load(array $from_entities, $relationship_name)
+    {
+        $ids = [];
+
+        foreach ($from_entities as $from_entity) {
+
+            if ($from_entity instanceof entity && $from_entity->is_not_null()) {
+
+                $ids[] = $from_entity->{$this->foreign_key};
+            }
+        }
+
+        $entities = dao($this->entity_name)->find($ids);
+
+        foreach ($from_entities as $from_entity) {
+
+            if (array_key_exists($from_entity->{$this->foreign_key}, $entities)) {
+
+                $from_entity->{$relationship_name} = $entities[$from_entity->{$this->foreign_key}];
+            }
+        }
+
+        return $entities;
+    }
+
     public function update($entity, entity $from_entity)
     {
         $from_entity->{$this->foreign_key} = $entity->id;
     }
 }/*}}}*/
 
-class has_many implements relationship_ref
+class has_many extends relationship_ref
 {
     /*{{{*/
     private $entity_name;
     private $foreign_key;
 
-    public function __construct($entity_name, $from_entity_name, $foreign_key)
+    public function __construct($entity_name, $foreign_key)
     {
         $this->entity_name = $entity_name;
         $this->foreign_key = $foreign_key;
@@ -367,6 +420,36 @@ class has_many implements relationship_ref
     public function load(entity $from_entity)
     {
         return dao($this->entity_name)->find_all_by_foreign_key($this->foreign_key, $from_entity->id);
+    }
+
+    public function batch_load(array $from_entities, $relationship_name)
+    {
+        $ids = array_keys($from_entities);
+
+        $entities = dao($this->entity_name)->find_all_by_foreign_keys($this->foreign_key, $ids);
+
+        $entities_indexed_by_foreign_key = [];
+
+        foreach ($entities as $entity) {
+
+            $foreign_id = $entity->{$this->foreign_key};
+
+            if (! array_key_exists($foreign_id,  $entities_indexed_by_foreign_key)) {
+
+                $entities_indexed_by_foreign_key[$foreign_id] = [];
+            }
+
+            $entities_indexed_by_foreign_key[$foreign_id][] = $entity;
+        }
+
+        foreach ($entities_indexed_by_foreign_key as $foreign_id => $relationship_entities) {
+
+            $from_entity = $from_entities[$foreign_id];
+
+            $from_entity->{$relationship_name} = $relationship_entities;
+        }
+
+        return $entities;
     }
 
     public function update($entities, entity $from_entity)
@@ -407,7 +490,7 @@ class dao
         $entity = local_cache_get($this->class_name, $id);
 
         if (is_null($entity)) {
-            $row = db_query_first('select * from `'.$this->table_name.'` where id = ?', [$id], $this->db_config_key);
+            $row = db_query_first('select * from `'.$this->table_name.'` where id = :id', [':id' => $id], $this->db_config_key);
             if ($row) {
                 $entity = $this->row_to_entity($row);
                 local_cache_set($entity);
@@ -425,6 +508,15 @@ class dao
 
         return $this->find_by_sql($sql_template, [
             ':foreign_key' => $value,
+        ]);
+    }/*}}}*/
+
+    public function find_all_by_foreign_keys(string $foreign_key, array $values)
+    {/*{{{*/
+        $sql_template = "select * from `$this->table_name` where $foreign_key in :foreign_keys";
+
+        return $this->find_all_by_sql($sql_template, [
+            ':foreign_keys' => $values,
         ]);
     }/*}}}*/
 
@@ -514,6 +606,24 @@ class dao
     }/*}}}*/
 
     protected function find_all_by_sql($sql_template, array $binds = [])
+    {/*{{{*/
+        $entities = [];
+
+        $rows = db_query($sql_template, $binds, $this->db_config_key);
+
+        foreach ($rows as $row) {
+            $entity = local_cache_get($this->class_name, $row['id']);
+            if (is_null($entity)) {
+                $entity = $this->row_to_entity($row);
+                local_cache_set($entity);
+            }
+            $entities[$entity->id] = $entity;
+        }
+
+        return $entities;
+    }/*}}}*/
+
+    protected function find_all_grouped_entities_by_sql($sql_template, array $binds = [])
     {/*{{{*/
         $entities = [];
 
@@ -770,6 +880,7 @@ function input_entity($entity_name, $message = null, $name = null)
     }
 
     if ($id = input($name)) {
+
         $entity = dao($entity_name)->find($id);
 
         otherwise($entity->is_not_null(), sprintf($message, $id));
@@ -778,4 +889,26 @@ function input_entity($entity_name, $message = null, $name = null)
     }
 
     otherwise(false, sprintf($message, $id));
+}
+
+function relationship_batch_load($entities, $relationship_chain)
+{
+    if (empty($entities)) {
+        return;
+    }
+
+    if ($entities instanceof entity) {
+
+        $entities = [$entities->id => $entities];
+    }
+
+    $relationships = explode('.', $relationship_chain);
+
+    foreach ($relationships as $relationship) {
+
+        $entity = reset($entities);
+
+        $entities = $entity->relationship_batch_load($relationship, $entities);
+
+    }
 }
