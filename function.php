@@ -275,7 +275,7 @@ function config($key)
 {/*{{{*/
     static $configs = [];
 
-    if (! array_key_exists($key, $configs)) {
+    if (! isset($configs[$key])) {
 
         $directories = config_dir();
 

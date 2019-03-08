@@ -159,11 +159,11 @@ abstract class entity implements JsonSerializable, Serializable
             return $this->$method();
         }
 
-        if (array_key_exists($property, $this->relationships)) {
+        if (isset($this->relationships[$property])) {
             return $this->relationships[$property];
         }
 
-        if (array_key_exists($property, $this->relationship_refs)) {
+        if (isset($this->relationship_refs[$property])) {
             return $this->load_relationship_from_ref($property);
         }
 
@@ -178,7 +178,7 @@ abstract class entity implements JsonSerializable, Serializable
             $value = $this->$method($value);
         }
 
-        if (array_key_exists($property, $this->relationship_refs)) {
+        if (isset($this->relationship_refs[$property])) {
 
             $this->relationship_refs[$property]->update($value, $this);
 
@@ -187,14 +187,14 @@ abstract class entity implements JsonSerializable, Serializable
 
         if (array_key_exists($property, $this->attributes)) {
 
-            if (array_key_exists($property, static::$struct_formats)) {
+            if (isset(static::$struct_formats[$property])) {
 
                 $format = static::$struct_formats[$property];
 
-                $format_description = array_key_exists($property, static::$struct_format_descriptions)?  static::$struct_format_descriptions[$property]: $property.' 格式错误';
+                $format_description = static::$struct_format_descriptions[$property] ?? $property.' 格式错误';
 
                 if (is_array($format)) {
-                    otherwise(array_key_exists($value, $format), $format_description);
+                    otherwise(isset($format[$value]), $format_description);
                 } else {
                     otherwise(preg_match($format, $value), $format_description);
                 }
