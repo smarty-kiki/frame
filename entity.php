@@ -182,7 +182,15 @@ abstract class entity implements JsonSerializable, Serializable
 
             $this->relationship_refs[$property]->update($value, $this);
 
-            return $this->relationships[$property] = $value;
+            if (empty($value)) {
+
+                unset($this->relationships[$property]);
+
+                return $value;
+            } else {
+
+                return $this->relationships[$property] = $value;
+            }
         }
 
         if (array_key_exists($property, $this->attributes)) {
