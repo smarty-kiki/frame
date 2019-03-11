@@ -353,7 +353,9 @@ class has_one extends relationship_ref
 
     public function update($entity, entity $from_entity)
     {
-        $entity->{$this->foreign_key} = $from_entity->id;
+        if ($entity instanceof entity) {
+            $entity->{$this->foreign_key} = $from_entity->id;
+        }
     }
 }/*}}}*/
 
@@ -403,7 +405,11 @@ class belongs_to extends relationship_ref
 
     public function update($entity, entity $from_entity)
     {
-        $from_entity->{$this->foreign_key} = $entity->id;
+        if ($entity instanceof entity) {
+            $from_entity->{$this->foreign_key} = $entity->id;
+        } else {
+            $from_entity->{$this->foreign_key} = 0;
+        }
     }
 }/*}}}*/
 
