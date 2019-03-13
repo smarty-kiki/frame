@@ -455,7 +455,7 @@ class has_many extends relationship_ref
                 $entities_indexed_by_foreign_key[$foreign_id] = [];
             }
 
-            $entities_indexed_by_foreign_key[$foreign_id][] = $entity;
+            $entities_indexed_by_foreign_key[$foreign_id][$entity->id] = $entity;
         }
 
         foreach ($entities_indexed_by_foreign_key as $foreign_id => $relationship_entities) {
@@ -927,4 +927,4 @@ function relationship_batch_load($entities, $relationship_chain)
             $entities = $entity->relationship_batch_load($relationship, $entities);
         }
     }
-}
+}       
