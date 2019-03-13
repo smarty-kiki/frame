@@ -180,17 +180,14 @@ abstract class entity implements JsonSerializable, Serializable
 
         if (isset($this->relationship_refs[$property])) {
 
-            $this->relationship_refs[$property]->update($value, $this);
+            if (isset($this->relationships[$property])) {
 
-            if (is_null($value)) {
-
-                unset($this->relationships[$property]);
-
-                return $value;
+                $this->relationship_refs[$property]->update($value, $this, $this->relationships[$property]);
             } else {
-
-                return $this->relationships[$property] = $value;
+                $this->relationship_refs[$property]->update($value, $this);
             }
+
+            return $this->relationships[$property] = $value;
         }
 
         if (array_key_exists($property, $this->attributes)) {
@@ -210,6 +207,13 @@ abstract class entity implements JsonSerializable, Serializable
 
             return $this->attributes[$property] = $value;
         }
+    }
+
+    final public function __unset($property)
+    {
+        otherwise(isset($this->relationships[$property]), '只能 unset 实体的关联关系');
+
+        unset($this->relationships[$property]);
     }
 
     private function load_relationship_from_ref($relationship_name)
@@ -323,7 +327,7 @@ abstract class relationship_ref
     /*{{{*/
     abstract public function load(entity $from_entity);
     abstract public function batch_load(array $from_entity, $relationship_name);
-    abstract public function update($values, entity $from_entity);
+    abstract public function update($values, entity $from_entity, $old_value);
 }/*}}}*/
 
 class has_one extends relationship_ref
@@ -359,8 +363,12 @@ class has_one extends relationship_ref
         return $entities;
     }
 
-    public function update($entity, entity $from_entity)
+    public function update($entity, entity $from_entity, $old_entity = null)
     {
+        if ($old_entity instanceof entity) {
+            $old_entity->{$this->foreign_key} = 0;
+        }
+
         if ($entity instanceof entity) {
             $entity->{$this->foreign_key} = $from_entity->id;
         }
@@ -411,7 +419,7 @@ class belongs_to extends relationship_ref
         return $entities;
     }
 
-    public function update($entity, entity $from_entity)
+    public function update($entity, entity $from_entity, $old_entity = null)
     {
         if ($entity instanceof entity) {
             $from_entity->{$this->foreign_key} = $entity->id;
@@ -466,8 +474,12 @@ class has_many extends relationship_ref
         return $entities;
     }
 
-    public function update($entities, entity $from_entity)
+    public function update($entities, entity $from_entity, $old_entities = [])
     {
+        foreach ($old_entities as $old_entity) {
+            $old_entity->{$this->foreign_key} = $from_entity->id;
+        }
+
         foreach ($entities as $entity) {
             $entity->{$this->foreign_key} = $from_entity->id;
         }
