@@ -922,8 +922,9 @@ function relationship_batch_load($entities, $relationship_chain)
 
     foreach ($relationships as $relationship) {
 
-        $entity = reset($entities);
+        if ($entity = reset($entities)) {
 
-        $entities = $entity->relationship_batch_load($relationship, $entities);
+            $entities = $entity->relationship_batch_load($relationship, $entities);
+        }
     }
 }
