@@ -182,7 +182,7 @@ abstract class entity implements JsonSerializable, Serializable
 
             $this->relationship_refs[$property]->update($value, $this);
 
-            if (empty($value)) {
+            if (is_null($value)) {
 
                 unset($this->relationships[$property]);
 
@@ -458,11 +458,9 @@ class has_many extends relationship_ref
             $entities_indexed_by_foreign_key[$foreign_id][$entity->id] = $entity;
         }
 
-        foreach ($entities_indexed_by_foreign_key as $foreign_id => $relationship_entities) {
+        foreach ($from_entities as $from_entity) {
 
-            $from_entity = $from_entities[$foreign_id];
-
-            $from_entity->{$relationship_name} = $relationship_entities;
+            $from_entity->{$relationship_name} = $entities_indexed_by_foreign_key[$from_entity->id] ?? [];
         }
 
         return $entities;
