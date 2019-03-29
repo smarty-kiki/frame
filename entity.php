@@ -68,6 +68,11 @@ abstract class entity implements JsonSerializable, Serializable
         return ! is_null($this->delete_time);
     }
 
+    final public function is_not_deleted()
+    {
+        return is_null($this->delete_time);
+    }
+
     final public function just_deleted()
     {
         return $this->just_deleted;
@@ -937,4 +942,6 @@ function relationship_batch_load($entities, $relationship_chain)
             $entities = $entity->relationship_batch_load($relationship, $entities);
         }
     }
+
+    return $entities;
 }       

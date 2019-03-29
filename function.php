@@ -108,7 +108,7 @@ function array_divide($array)
     return array(array_keys($array), array_values($array));
 }/*}}}*/
 
-function array_build($array, Closure $callback)
+function array_build($array, closure $callback)
 {/*{{{*/
     $results = [];
 
@@ -116,6 +116,34 @@ function array_build($array, Closure $callback)
         list($innerKey, $innerValue) = call_user_func($callback, $key, $value);
 
         $results[$innerKey] = $innerValue;
+    }
+
+    return $results;
+}/*}}}*/
+
+function array_indexed(array $array, closure $callback)
+{/*{{{*/
+    $results = [];
+
+    foreach ($array as $key => $value) {
+
+        list($index, $innerKey, $innerValue) = call_user_func($callback, $key, $value);
+
+        if (! isset($results[$index])) {
+            $results[$index] = [];
+        }
+
+        if (is_null($innerKey)) {
+
+            $results[$index][] = $innerValue;
+        } else {
+            if (! isset($results[$index][$innerKey])) {
+
+                $results[$index][$innerKey] = [];
+            }
+
+            $results[$index][$innerKey] = $innerValue;
+        }
     }
 
     return $results;
