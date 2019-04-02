@@ -113,9 +113,15 @@ function array_build($array, closure $callback)
     $results = [];
 
     foreach ($array as $key => $value) {
+
         list($innerKey, $innerValue) = call_user_func($callback, $key, $value);
 
-        $results[$innerKey] = $innerValue;
+        if (is_null($innerKey)) {
+
+            $results[] = $innerValue;
+        } else {
+            $results[$innerKey] = $innerValue;
+        }
     }
 
     return $results;
