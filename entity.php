@@ -514,7 +514,7 @@ class dao
 
     private function find_by_id($id)
     {/*{{{*/
-        if (empty($id)) {
+        if (empty($id) && $id !== 0) {
             return null_entity::create($this->class_name);
         }
 
