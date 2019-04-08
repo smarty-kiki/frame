@@ -294,6 +294,32 @@ function is_url($path)
     return filter_var($path, FILTER_VALIDATE_URL) !== false;
 }/*}}}*/
 
+function unparse_url(array $parsed)
+{/*{{{*/
+    $get = function ($key) use ($parsed) {
+        return isset($parsed[$key]) ? $parsed[$key] : null;
+    };
+
+    $pass      = $get('pass');
+    $user      = $get('user');
+    $userinfo  = $pass !== null ? "$user:$pass" : $user;
+    $port      = $get('port');
+    $scheme    = $get('scheme');
+    $query     = $get('query');
+    $fragment  = $get('fragment');
+    $authority =
+        ($userinfo !== null ? "$userinfo@" : '') .
+        $get('host') .
+        ($port ? ":$port" : '');
+
+    return
+        (strlen($scheme) ? "$scheme:" : '') .
+        (strlen($authority) ? "//$authority" : '') .
+        $get('path') .
+        (strlen($query) ? "?$query" : '') .
+        (strlen($fragment) ? "#$fragment" : '');
+}/*}}}*/
+
 function config_dir($dir = null)
 {/*{{{*/
     static $container = [];
