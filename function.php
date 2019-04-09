@@ -320,6 +320,18 @@ function unparse_url(array $parsed)
         (strlen($fragment) ? "#$fragment" : '');
 }/*}}}*/
 
+function url_transfer($url, closure $transfer_action)
+{/*{{{*/
+    $url_info = parse_url($url);
+
+    parse_str($url_info['query'], $query_info);
+    $url_info['query'] = $query_info;
+    $url_info = call_user_func($transfer_action, $url_info);
+    $url_info['query'] = http_build_query($url_info['query']);
+
+    return unparse_url($url_info);
+}/*}}}*/
+
 function config_dir($dir = null)
 {/*{{{*/
     static $container = [];
