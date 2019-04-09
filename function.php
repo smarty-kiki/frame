@@ -324,8 +324,12 @@ function url_transfer($url, closure $transfer_action)
 {/*{{{*/
     $url_info = parse_url($url);
 
-    parse_str($url_info['query'], $query_info);
-    $url_info['query'] = $query_info;
+    if (isset($url_info['query'])) {
+        parse_str($url_info['query'], $query_info);
+        $url_info['query'] = $query_info;
+    } else {
+        $url_info['query'] = [];
+    }
     $url_info = call_user_func($transfer_action, $url_info);
     $url_info['query'] = http_build_query($url_info['query']);
 
