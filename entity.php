@@ -556,6 +556,19 @@ class dao
         return $entity;
     }/*}}}*/
 
+    public function find_by_column(array $columns)
+    {/*{{{*/
+        if (! $this->with_deleted) {
+            $columns['delete_time'] = null;
+        } else {
+            unset($columns['delete_time']);
+        }
+
+        list($where, $binds) = db_simple_where_sql($columns);
+
+        return $this->find_by_sql('select * from `'.$this->table_name."` where $where order by id", $binds);
+    }/*}}}*/
+
     public function find_by_foreign_key(string $foreign_key, $value)
     {/*{{{*/
         $with_deleted_sql = '';
