@@ -454,6 +454,7 @@ function _spider_job(
            $data,
     string $format,
     array  $spider_rule,
+           $closure_or_null,
     int    $priority,
     array  $retry,
     string $config_key
@@ -472,13 +473,14 @@ function _spider_job(
         'data' => $data,
         'format' => $format,
         'rule' => $spider_rule,
+        'closure' => $closure_or_null,
         'priority' => $priority,
         'retry' => $retry,
         'config_key' => $config_key,
     ];
 }/*}}}*/
 
-function spider_job_get(string $job_name, string $cron_string, string $url, string $format, array $spider_rule, $priority = 10, $retry = [], $config_key = 'default')
+function spider_job_get(string $job_name, string $cron_string, string $url, string $format, array $spider_rule, $closure_or_null = null, $priority = 10, $retry = [], $config_key = 'default')
 {/*{{{*/
     $jobs = spider_jobs();
 
@@ -491,6 +493,7 @@ function spider_job_get(string $job_name, string $cron_string, string $url, stri
         [],
         $format,
         $spider_rule,
+        $closure_or_null,
         $priority,
         $retry,
         $config_key
@@ -499,7 +502,7 @@ function spider_job_get(string $job_name, string $cron_string, string $url, stri
     spider_jobs($jobs);
 }/*}}}*/
 
-function spider_job_post(string $job_name, string $cron_string, string $url, $data, string $format, array $spider_rule, $priority = 10, $retry = [], $config_key = 'default')
+function spider_job_post(string $job_name, string $cron_string, string $url, $data, string $format, array $spider_rule, $closure_or_null = null, $priority = 10, $retry = [], $config_key = 'default')
 {/*{{{*/
     $jobs = spider_jobs();
 
@@ -512,6 +515,7 @@ function spider_job_post(string $job_name, string $cron_string, string $url, $da
         $data,
         $format,
         $spider_rule,
+        $closure_or_null,
         $priority,
         $retry,
         $config_key
@@ -582,10 +586,10 @@ function spider_watch($config_key = 'default', $memory_limit = 1048576)
 
         if ('get' == $job['method']) {
 
-            $res = spider_run_get($url?:$job['url'], $job['format'], $job['rule']);
+            $res = spider_run_get($url?:$job['url'], $job['format'], $job['rule'], $job['closure']);
         } else {
 
-            $res = spider_run_post($url?:$job['url'], $data?:$job['data'], $job['format'], $job['rule']);
+            $res = spider_run_post($url?:$job['url'], $data?:$job['data'], $job['format'], $job['rule'], $job['closure']);
         }
 
         if ($res) {
@@ -652,18 +656,36 @@ function _spider_transfer_result($result, $format, array $spider_rule)
     }
 }/*}}}*/
 
-function spider_run_get($url, string $format, array $spider_rule)
+function spider_run_get($url, string $format, array $spider_rule, $closure_or_null = null)
 {/*{{{*/
     $result = remote_get($url, 30);
 
-    return _spider_transfer_result($result, $format, $spider_rule);
+    $res = _spider_transfer_result($result, $format, $spider_rule);
+
+    if ($closure_or_null) {
+        $tmp_res = call_user_func($closure_or_null, $res);
+        if ($tmp_res) {
+            $res = $tmp_res;
+        }
+    }
+
+    return $res;
 }/*}}}*/
 
-function spider_run_post($url, $data, string $format, array $spider_rule)
+function spider_run_post($url, $data, string $format, array $spider_rule, $closure_or_null = null)
 {/*{{{*/
     $result = remote_post($url, $data, 30);
 
-    return _spider_transfer_result($result, $format, $spider_rule);
+    $res = _spider_transfer_result($result, $format, $spider_rule);
+
+    if ($closure_or_null) {
+        $tmp_res = call_user_func($closure_or_null, $res);
+        if ($tmp_res) {
+            $res = $tmp_res;
+        }
+    }
+
+    return $res;
 }/*}}}*/
 
 /**
