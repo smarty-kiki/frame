@@ -4,6 +4,13 @@ function _beanstalk_connection($config_key)
 {/*{{{*/
     static $configs = [];
     static $container = [];
+	if (empty($config_key)) {
+		$configs = null;
+		$container = null;
+		$configs = [];
+		$container = [];
+		return;
+	}
 
     if (empty($configs)) {
         $configs = config('beanstalk');
@@ -26,11 +33,11 @@ function _beanstalk_connection($config_key)
 }/*}}}*/
 
 function _beanstalk_disconnect($fp)
-{/*{{{*/
-    _beanstalk_connection_write($fp, 'quit');
-
-    return fclose($fp);
-}/*}}}*/
+{
+     _beanstalk_connection_write($fp, 'quit');
+	 fclose($fp);
+	 _beanstalk_connection([]);
+}
 
 function _beanstalk_connection_read($fp)
 {/*{{{*/
@@ -182,7 +189,7 @@ function _beanstalk_ignore($fp, $tube)
             return (integer) strtok(' ');
         case 'NOT_IGNORED':
         default:
-        $this->_error($status);
+        throw new Exception($status);
         return false;
     }
 }/*}}}*/
