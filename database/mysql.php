@@ -41,15 +41,9 @@ function _mysql_connection(array $config)
 
 function _mysql_database_closure($config_key, $type, closure $closure)
 {/*{{{*/
-    static $configs = [];
-
-    if (empty($configs)) {
-        $configs = config('mysql');
-    }
+    $config = config_midware('mysql', $config_key);
 
     $type = db_force_type_write()? 'write': $type;
-
-    $config = $configs[$config_key];
 
     $connection = _mysql_connection([
         'host' => $host = array_rand($config[$type]),
@@ -59,7 +53,7 @@ function _mysql_database_closure($config_key, $type, closure $closure)
         'password' => $config['password'],
         'charset' => $config['charset'],
         'collation' => $config['collation'],
-        'options' => $configs['options'],
+        'options' => $config['options'],
     ]);
 
     return call_user_func($closure, $connection);

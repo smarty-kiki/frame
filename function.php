@@ -347,31 +347,49 @@ function config_dir($dir = null)
     return $container;
 }/*}}}*/
 
-function config($key)
+function config($file_name)
 {/*{{{*/
     static $configs = [];
 
-    if (! isset($configs[$key])) {
+    if (! isset($configs[$file_name])) {
 
         $directories = config_dir();
 
-        $configs[$key] = [];
+        $configs[$file_name] = [];
 
         foreach ($directories as $dir) {
 
-            if (is_file($config_file = $dir.'/'.$key.'.php')) {
+            if (is_file($config_file = $dir.'/'.$file_name.'.php')) {
 
-                $configs[$key] = array_replace_recursive($configs[$key], include $config_file);
+                $configs[$file_name] = array_replace_recursive($configs[$file_name], include $config_file);
             }
 
-            if (is_file($env_config_file = $dir.'/'.env().'/'.$key.'.php')) {
+            if (is_file($env_config_file = $dir.'/'.env().'/'.$file_name.'.php')) {
 
-                $configs[$key] = array_replace_recursive($configs[$key], include $env_config_file);
+                $configs[$file_name] = array_replace_recursive($configs[$file_name], include $env_config_file);
             }
         }
     }
 
-    return $configs[$key];
+    return $configs[$file_name];
+}/*}}}*/
+
+function config_midware($file_name, $midware_name)
+{/*{{{*/
+    static $configs = [];
+
+    $identifier = $midware_name.'_'.$file_name;
+
+    if (! isset($configs[$identifier])) {
+
+        $midware_config = config($file_name);
+
+        $resource_key = $midware_config['midwares'][$midware_name];
+
+        $configs[$identifier] = $midware_config['resources'][$resource_key];
+    }
+
+    return $configs[$identifier];
 }/*}}}*/
 
 function env()
@@ -615,4 +633,17 @@ function instance($class_name, array $args = [])
 function json($data = [])
 {/*{{{*/
     return json_encode($data, JSON_UNESCAPED_UNICODE);
+}/*}}}*/
+
+function option_define(...$options)
+{/*{{{*/
+    foreach ($options as $i => $option)
+    {
+        define($option, pow(2, $i));
+    }
+}/*}}}*/
+
+function has_option($options, $define)
+{/*{{{*/
+    return $options === ($options | $define);
 }/*}}}*/

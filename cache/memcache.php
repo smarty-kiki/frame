@@ -31,13 +31,9 @@ function _memcache_connection(array $config)
 
 function _memcache_cache_closure($config_key, closure $closure)
 {/*{{{*/
-    static $config = array();
+    $config = config_midware('memcache', $config_key);
 
-    if (empty($config)) {
-        $config = config('memcache');
-    }
-
-    $connection = _memcache_connection($config[$config_key]);
+    $connection = _memcache_connection($config);
 
     return call_user_func($closure, $connection);
 }/*}}}*/

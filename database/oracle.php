@@ -21,15 +21,9 @@ function _oracle_connection($host, $port, $database, $username, $password, $char
 
 function _oracle_database_closure($config_key, $type, closure $closure)
 {/*{{{*/
-    static $configs = [];
-
-    if (empty($configs)) {
-        $configs = config('oracle');
-    }
+    $config = config_midware('oracle', $config_key);
 
     $type = db_force_type_write()? 'write': $type;
-
-    $config = $configs[$config_key];
 
     $connection = _oracle_connection(
         $host = array_rand($config[$type]),
@@ -38,7 +32,7 @@ function _oracle_database_closure($config_key, $type, closure $closure)
         $config['username'],
         $config['password'],
         $config['charset'],
-        $configs['options']
+        $config['options']
     );
 
     return call_user_func($closure, $connection);

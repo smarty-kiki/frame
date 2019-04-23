@@ -54,13 +54,9 @@ function _redis_connection(array $config)
 
 function _redis_cache_closure($config_key, closure $closure)
 {/*{{{*/
-    static $configs = [];
+    $config = config_midware('redis', $config_key);
 
-    if (empty($configs)) {
-        $configs = config('redis');
-    }
-
-    $redis = _redis_connection($configs[$config_key]);
+    $redis = _redis_connection($config);
 
     return call_user_func($closure, $redis);
 }/*}}}*/

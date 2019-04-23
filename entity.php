@@ -704,7 +704,7 @@ class dao
 
     protected function find_all_by_condition($condition, array $binds = [])
     {/*{{{*/
-        return $this->find_all_by_sql('select * from `'.$this->table_name.'` where '.$condition, $binds);
+        return $this->find_all_by_sql('select * from `'.$this->table_name.'` where '.  $condition, $binds);
     }/*}}}*/
 
     protected function find_all_by_sql($sql_template, array $binds = [])

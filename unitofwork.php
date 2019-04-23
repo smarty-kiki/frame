@@ -1,5 +1,7 @@
 <?php
 
+define('IDGENTER_CACHE_MIDWARE_KEY', 'idgenter');
+
 function unit_of_work_db_config_key($config_key = null)
 {
     static $container = 'default';
@@ -83,7 +85,7 @@ function generate_id($mark = 'idgenter')
             static $step_last_id;
 
             if ($now_id === $step_last_id) {
-                $step_last_id = cache_increment($mark.'_last_id', $step, 0, 'idgenter');
+                $step_last_id = cache_increment($mark.'_last_id', $step, 0, IDGENTER_CACHE_MIDWARE_KEY);
                 $now_id = $step_last_id - $step;
             }
 

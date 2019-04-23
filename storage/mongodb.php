@@ -33,13 +33,7 @@ function _mongodb_connection($host, $port, $database, $username, $password)
 
 function _mongodb_database_closure($config_key, closure $closure)
 {/*{{{*/
-    static $configs = [];
-
-    if (empty($configs)) {
-        $configs = config('mongodb');
-    }
-
-    $config = $configs[$config_key];
+    $config = config_midware('mongodb', $config_key);
 
     $connection = _mongodb_connection(
         $config['host'],
