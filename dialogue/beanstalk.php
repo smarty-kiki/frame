@@ -95,7 +95,7 @@ function dialogue_topic_match($content, $topic)
     return [$matched, $args];
 }/*}}}*/
 
-function _dialogue_pull_message($tube, $timeout = null, $config_key = 'default')
+function _dialogue_pull_message($tube, $timeout = null, $config_key = 'dialogue')
 {/*{{{*/
     $fp = _beanstalk_connection($config_key);
 
@@ -154,7 +154,7 @@ function _dialogue_push_sync_user_tube($sync_user_tube = null)
     return $container;
 }/*}}}*/
 
-function _dialogue_push($user_id, $content, $tube, $is_sync = false, $delay = 0, $priority = 10, $config_key = 'default')
+function _dialogue_push($user_id, $content, $tube, $is_sync = false, $delay = 0, $priority = 10, $config_key = 'dialogue')
 {/*{{{*/
     $message = [
         'user_id' => $user_id,
@@ -176,7 +176,7 @@ function _dialogue_push($user_id, $content, $tube, $is_sync = false, $delay = 0,
     }
 }/*}}}*/
 
-function _dialogue_push_message($message, $tube, $delay = 0, $priority = 10, $config_key = 'default')
+function _dialogue_push_message($message, $tube, $delay = 0, $priority = 10, $config_key = 'dialogue')
 {/*{{{*/
     $fp = _beanstalk_connection($config_key);
 
@@ -191,7 +191,7 @@ function _dialogue_push_message($message, $tube, $delay = 0, $priority = 10, $co
     );
 }/*}}}*/
 
-function dialogue_push($user_id, $content, $is_sync = false, $delay = 0, $priority = 10, $config_key = 'default')
+function dialogue_push($user_id, $content, $is_sync = false, $delay = 0, $priority = 10, $config_key = 'dialogue')
 {/*{{{*/
     $tubes = _dialogue_waiting_user_tubes($user_id);
 
@@ -206,7 +206,7 @@ function dialogue_push($user_id, $content, $is_sync = false, $delay = 0, $priori
  * operator
  */
 
-function dialogue_push_to_other_operator($message, $delay = 0, $priority = 10, $config_key = 'default')
+function dialogue_push_to_other_operator($message, $delay = 0, $priority = 10, $config_key = 'dialogue')
 {/*{{{*/
     $user_id = $message['user_id'];
 
@@ -308,7 +308,7 @@ function _dialogue_operator_waiting_with_user($user_id, $timeout, closure $actio
     }
 }/*}}}*/
 
-function dialogue_watch($config_key = 'default', $memory_limit = 1048576)
+function dialogue_watch($config_key = 'dialogue', $memory_limit = 1048576)
 {/*{{{*/
     declare(ticks=1);
     $received_signal = false;
@@ -370,7 +370,7 @@ function dialogue_watch($config_key = 'default', $memory_limit = 1048576)
     }
 }/*}}}*/
 
-function dialogue_ask_and_wait($user_id, $ask, $pattern = null, $timeout = 60, $config_key = 'default')
+function dialogue_ask_and_wait($user_id, $ask, $pattern = null, $timeout = 60, $config_key = 'dialogue')
 {/*{{{*/
     $timeout_time = time() + $timeout;
 
