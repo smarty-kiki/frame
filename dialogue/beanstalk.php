@@ -182,7 +182,7 @@ function _dialogue_push_sync_user_tube($sync_user_tube = null)
 function _dialogue_push($user_info, $content, $tube, $is_sync = false, $delay = 0, $priority = 10, $config_key = 'dialogue')
 {/*{{{*/
     $message = [
-        'user_info' => serialize($user_info),
+        'user_info' => $user_info,
         'content' => $content,
         'time' => datetime(),
     ];
@@ -361,7 +361,7 @@ function dialogue_watch($config_key = 'dialogue', $memory_limit = 1048576)
 
         $message = _dialogue_pull_message(DIALOGUE_POOL_TUBE, null, $config_key);
 
-        $user_info = unserialize($message['user_info']);
+        $user_info = $message['user_info'];
         $content = $message['content'];
         $time = $message['time'];
 
