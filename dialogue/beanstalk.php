@@ -8,7 +8,7 @@ define('DIALOGUE_PUSH_SYNC_USER_TUBE_PREFIX', 'dialogue_push_sync_');
  * delegate
  */
 
-function dialogue_send_action(closure $action = null)
+function dialogue_async_send_action(closure $action = null)
 {/*{{{*/
     static $container = null;
 
@@ -52,10 +52,20 @@ function dialogue_topic_match_extension_action(closure $action = null)
     return $container;
 }/*}}}*/
 
+function dialogue_user_tube_string_action(closure $action = null)
+{/*{{{*/
+    static $container = null;
+
+    if (!empty($action)) {
+        return $container = $action;
+    }
+
+    return $container;
+}/*}}}*/
+
 /**
  * tool
  */
-
 function dialogue_topics($topics = null)
 {/*{{{*/
     static $container = [];
@@ -125,22 +135,37 @@ function _dialogue_pull_message($tube, $timeout = null, $config_key = 'dialogue'
     return $message;
 }/*}}}*/
 
+function _dialogue_user_tube_string($user_info)
+{/*{{{*/
+    $action = dialogue_user_tube_string_action();
+
+    if (is_null($action)) {
+        return $user_info;
+    }
+
+    return call_user_func($action, $user_info);
+}/*}}}*/
+
 /**
  * dispatch
  */
 
-function _dialogue_waiting_user_tubes($user_id)
+function _dialogue_waiting_user_tubes($user_info)
 {/*{{{*/
-    $tubes = cache_keys(DIALOGUE_WAITING_USER_TUBE_PREFIX.$user_id.'_*');
+    $user_tube_string = _dialogue_user_tube_string($user_info);
+
+    $tubes = cache_keys(DIALOGUE_WAITING_USER_TUBE_PREFIX.$user_tube_string.'_*');
 
     sort($tubes);
 
     return $tubes;
 }/*}}}*/
 
-function _dialogue_generate_sync_user_tube($user_id)
+function _dialogue_generate_sync_user_tube($user_info)
 {/*{{{*/
-    return DIALOGUE_PUSH_SYNC_USER_TUBE_PREFIX.$user_id.'_'.microtime(true);
+    $user_tube_string = _dialogue_user_tube_string($user_info);
+
+    return DIALOGUE_PUSH_SYNC_USER_TUBE_PREFIX.$user_tube_string.'_'.microtime(true);
 }/*}}}*/
 
 function _dialogue_push_sync_user_tube($sync_user_tube = null)
@@ -154,17 +179,17 @@ function _dialogue_push_sync_user_tube($sync_user_tube = null)
     return $container;
 }/*}}}*/
 
-function _dialogue_push($user_id, $content, $tube, $is_sync = false, $delay = 0, $priority = 10, $config_key = 'dialogue')
+function _dialogue_push($user_info, $content, $tube, $is_sync = false, $delay = 0, $priority = 10, $config_key = 'dialogue')
 {/*{{{*/
     $message = [
-        'user_id' => $user_id,
+        'user_info' => serialize($user_info),
         'content' => $content,
         'time' => datetime(),
     ];
 
     if ($is_sync) {
 
-        $sync_user_tube = $message['sync_user_tube'] = _dialogue_generate_sync_user_tube($user_id);
+        $sync_user_tube = $message['sync_user_tube'] = _dialogue_generate_sync_user_tube($user_info);
 
         $id = _dialogue_push_message($message, $tube, $delay, $priority, $config_key);
 
@@ -191,15 +216,15 @@ function _dialogue_push_message($message, $tube, $delay = 0, $priority = 10, $co
     );
 }/*}}}*/
 
-function dialogue_push($user_id, $content, $is_sync = false, $delay = 0, $priority = 10, $config_key = 'dialogue')
+function dialogue_push($user_info, $content, $is_sync = false, $delay = 0, $priority = 10, $config_key = 'dialogue')
 {/*{{{*/
-    $tubes = _dialogue_waiting_user_tubes($user_id);
+    $tubes = _dialogue_waiting_user_tubes($user_info);
 
     $tube = reset($tubes);
 
     $tube = $tube? $tube: DIALOGUE_POOL_TUBE;
 
-    return _dialogue_push($user_id, $content, $tube, $is_sync, $delay, $priority, $config_key);
+    return _dialogue_push($user_info, $content, $tube, $is_sync, $delay, $priority, $config_key);
 }/*}}}*/
 
 /**
@@ -208,9 +233,9 @@ function dialogue_push($user_id, $content, $is_sync = false, $delay = 0, $priori
 
 function dialogue_push_to_other_operator($message, $delay = 0, $priority = 10, $config_key = 'dialogue')
 {/*{{{*/
-    $user_id = $message['user_id'];
+    $user_info = unserialize($message['user_info']);
 
-    $tubes = _dialogue_waiting_user_tubes($user_id);
+    $tubes = _dialogue_waiting_user_tubes($user_info);
 
     $now_tube = _dialogue_waiting_user_tube();
 
@@ -249,20 +274,20 @@ function _dialogue_content_match($content, $pattern)
     }
 }/*}}}*/
 
-function _dialogue_operator_topic_user($user_id = null)
+function _dialogue_operator_topic_user($user_info = null)
 {/*{{{*/
     static $container = null;
 
-    if (! is_null($user_id)) {
-        $container = $user_id;
+    if (! is_null($user_info)) {
+        $container = $user_info;
     }
 
     return $container;
 }/*}}}*/
 
-function _dialogue_operator_talking_with_user($user_id, closure $action)
+function _dialogue_operator_talking_with_user($user_info, closure $action)
 {/*{{{*/
-    _dialogue_operator_topic_user($user_id);
+    _dialogue_operator_topic_user($user_info);
 
     $res = call_user_func($action);
 
@@ -271,13 +296,17 @@ function _dialogue_operator_talking_with_user($user_id, closure $action)
     return $res;
 }/*}}}*/
 
-function _dialogue_waiting_user_tube($user_id = null)
+function _dialogue_waiting_user_tube($user_info = null)
 {/*{{{*/
     static $container = null;
 
-    if (! is_null($user_id)) {
-        if ($user_id) {
-            $container = DIALOGUE_WAITING_USER_TUBE_PREFIX.$user_id.'_'.microtime(true);
+    if (! is_null($user_info)) {
+
+        if ($user_info) {
+
+            $user_tube_string = _dialogue_user_tube_string($user_info);
+
+            $container = DIALOGUE_WAITING_USER_TUBE_PREFIX.$user_tube_string.'_'.microtime(true);
         } else {
             $container = null;
         }
@@ -286,9 +315,9 @@ function _dialogue_waiting_user_tube($user_id = null)
     return $container;
 }/*}}}*/
 
-function _dialogue_operator_waiting_with_user($user_id, $timeout, closure $action)
+function _dialogue_operator_waiting_with_user($user_info, $timeout, closure $action)
 {/*{{{*/
-    $user_tube = _dialogue_waiting_user_tube($user_id);
+    $user_tube = _dialogue_waiting_user_tube($user_info);
 
     cache_increment($user_tube, 1, $timeout);
 
@@ -332,7 +361,7 @@ function dialogue_watch($config_key = 'dialogue', $memory_limit = 1048576)
 
         $message = _dialogue_pull_message(DIALOGUE_POOL_TUBE, null, $config_key);
 
-        $user_id = $message['user_id'];
+        $user_info = unserialize($message['user_info']);
         $content = $message['content'];
         $time = $message['time'];
 
@@ -348,8 +377,8 @@ function dialogue_watch($config_key = 'dialogue', $memory_limit = 1048576)
 
                     if ($matched_topic) {
 
-                        _dialogue_operator_talking_with_user($user_id, function () use ($info, $user_id, $content, $time, $args) {
-                            call_user_func_array($info['closure'], array_merge([$user_id, $content, $time], $args));
+                        _dialogue_operator_talking_with_user($user_info, function () use ($info, $user_info, $content, $time, $args) {
+                            call_user_func_array($info['closure'], array_merge([$user_info, $content, $time], $args));
                         });
 
                         break(2);
@@ -359,24 +388,24 @@ function dialogue_watch($config_key = 'dialogue', $memory_limit = 1048576)
 
             if ($matched_topic) {
                 if ($finished_action instanceof closure) {
-                    call_user_func($finished_action, $user_id, $content, $time);
+                    call_user_func($finished_action, $user_info, $content, $time);
                 }
             } else {
                 if ($missed_action instanceof closure) {
-                    call_user_func($missed_action, $user_id, $content, $time);
+                    call_user_func($missed_action, $user_info, $content, $time);
                 }
             }
         }
     }
 }/*}}}*/
 
-function dialogue_ask_and_wait($user_id, $ask, $pattern = null, $timeout = 60, $config_key = 'dialogue')
+function dialogue_ask_and_wait($user_info, $ask, $pattern = null, $timeout = 60, $config_key = 'dialogue')
 {/*{{{*/
     $timeout_time = time() + $timeout;
 
-    return _dialogue_operator_waiting_with_user($user_id, $timeout, function ($user_tube) use ($timeout_time, $user_id, $ask, $pattern, $config_key) {
+    return _dialogue_operator_waiting_with_user($user_info, $timeout, function ($user_tube) use ($timeout_time, $user_info, $ask, $pattern, $config_key) {
 
-        dialogue_say($user_id, $ask);
+        dialogue_say($user_info, $ask);
 
         for (;;) {
 
@@ -405,12 +434,12 @@ function dialogue_ask_and_wait($user_id, $ask, $pattern = null, $timeout = 60, $
     });
 }/*}}}*/
 
-function dialogue_choice_and_wait($user_id, $ask, array $choice, $timeout, closure $action)
+function dialogue_choice_and_wait($user_info, $ask, array $choice, $timeout, closure $action)
 {/*{{{*/
 
 }/*}}}*/
 
-function dialogue_form_and_wait($user_id, $ask, array $form, $timeout, closure $action)
+function dialogue_form_and_wait($user_info, $ask, array $form, $timeout, closure $action)
 {/*{{{*/
 
 }/*}}}*/
@@ -438,19 +467,19 @@ function _dialogue_force_say_sync($bool = null)
     return $container;
 }/*}}}*/
 
-function dialogue_say($user_id, $content)
+function dialogue_say($user_info, $content)
 {/*{{{*/
     if (_dialogue_force_say_sync()) {
 
-        _dialogue_push($user_id, $content, _dialogue_push_sync_user_tube());
+        _dialogue_push($user_info, $content, _dialogue_push_sync_user_tube());
 
         _dialogue_force_say_sync(false);
 
         _dialogue_push_sync_user_tube(false);
     } else {
 
-        $action = dialogue_send_action();
+        $action = dialogue_async_send_action();
 
-        call_user_func($action, $user_id, $content);
+        call_user_func($action, $user_info, $content);
     }
 }/*}}}*/
