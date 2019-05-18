@@ -93,16 +93,51 @@ function dialogue_topic_match($content, $topic)
         }
     }
 
-    if (! $matched) {
+    return [$matched, $args];
+}/*}}}*/
+
+function _dialogue_topic_match_closure($content, closure $closure)
+{/*{{{*/
+    $topics = dialogue_topics();
+
+    $matched_topic = false;
+
+    foreach ($topics as $topic) {
+
+        foreach ((array) $topic['topic'] as $topic_string) {
+
+            list($matched_topic, $args) = dialogue_topic_match($content, $topic_string);
+
+            if ($matched_topic) {
+
+                call_user_func($closure, $topic, $args);
+
+                break(2);
+            }
+        }
+    }
+
+    if (! $matched_topic) {
 
         $match_extension_action = dialogue_topic_match_extension_action();
 
         if ($match_extension_action instanceof closure) {
-            list($matched, $args) = call_user_func($match_extension_action, $content, $topic);
+
+            foreach ($topics as $topic) {
+
+                list($matched_topic, $args) = call_user_func($match_extension_action, $content, $topic['topic']);
+
+                if ($matched_topic) {
+
+                    call_user_func($closure, $topic, $args);
+
+                    break;
+                }
+            }
         }
     }
 
-    return [$matched, $args];
+    return $matched_topic;
 }/*}}}*/
 
 function _dialogue_pull_message($tube, $timeout = null, $config_key = 'dialogue')
@@ -139,11 +174,12 @@ function _dialogue_user_tube_string($user_info)
 {/*{{{*/
     $action = dialogue_user_tube_string_action();
 
-    if (is_null($action)) {
-        return $user_info;
+    if ($action instanceof closure) {
+
+        return call_user_func($action, $user_info);
     }
 
-    return call_user_func($action, $user_info);
+    return $user_info;
 }/*}}}*/
 
 /**
@@ -345,7 +381,6 @@ function dialogue_watch($config_key = 'dialogue', $memory_limit = 1048576)
         $received_signal = true;
     });
 
-    $topics = dialogue_topics();
     $missed_action = dialogue_topic_miss_action();
     $finished_action = dialogue_topic_finish_action();
 
@@ -367,24 +402,13 @@ function dialogue_watch($config_key = 'dialogue', $memory_limit = 1048576)
 
         if (datetime($time." +1 min") > datetime()) {
 
-            $matched_topic = false;
+            $matched_topic = _dialogue_topic_match_closure($content, function ($topic, $args) use ($user_info, $content, $time) {
 
-            foreach ($topics as $info) {
+                _dialogue_operator_talking_with_user($user_info, function () use ($topic, $user_info, $content, $time, $args) {
 
-                foreach ((array) $info['topic'] as $topic) {
-
-                    list($matched_topic, $args) = dialogue_topic_match($content, $topic);
-
-                    if ($matched_topic) {
-
-                        _dialogue_operator_talking_with_user($user_info, function () use ($info, $user_info, $content, $time, $args) {
-                            call_user_func_array($info['closure'], array_merge([$user_info, $content, $time], $args));
-                        });
-
-                        break(2);
-                    }
-                }
-            }
+                    call_user_func_array($topic['closure'], array_merge([$user_info, $content, $time], $args));
+                });
+            });
 
             if ($matched_topic) {
                 if ($finished_action instanceof closure) {
