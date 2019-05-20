@@ -142,6 +142,7 @@ function _spider_job(
     string $format,
            $spider_rule,
            $closure_or_null,
+           $multi_insert_trace_key,
     int    $priority,
     array  $retry,
     string $config_key
@@ -161,13 +162,14 @@ function _spider_job(
         'format' => $format,
         'rule' => $spider_rule,
         'closure' => $closure_or_null,
+        'multi_insert_trace_key' => $multi_insert_trace_key,
         'priority' => $priority,
         'retry' => $retry,
         'config_key' => $config_key,
     ];
 }/*}}}*/
 
-function spider_job_get(string $job_name, string $cron_string, string $url, string $format, $spider_rule, $closure_or_null = null, $priority = 10, $retry = [], $config_key = 'spider')
+function spider_job_get(string $job_name, string $cron_string, string $url, string $format, $spider_rule, $closure_or_null = null, $multi_insert_trace_key = null, $priority = 10, $retry = [], $config_key = 'spider')
 {/*{{{*/
     $jobs = spider_jobs();
 
@@ -181,6 +183,7 @@ function spider_job_get(string $job_name, string $cron_string, string $url, stri
         $format,
         $spider_rule,
         $closure_or_null,
+        $multi_insert_trace_key,
         $priority,
         $retry,
         $config_key
@@ -189,7 +192,7 @@ function spider_job_get(string $job_name, string $cron_string, string $url, stri
     spider_jobs($jobs);
 }/*}}}*/
 
-function spider_job_post(string $job_name, string $cron_string, string $url, $data, string $format, $spider_rule, $closure_or_null = null, $priority = 10, $retry = [], $config_key = 'spider')
+function spider_job_post(string $job_name, string $cron_string, string $url, $data, string $format, $spider_rule, $closure_or_null = null, $multi_insert_trace_key = null, $priority = 10, $retry = [], $config_key = 'spider')
 {/*{{{*/
     $jobs = spider_jobs();
 
@@ -203,6 +206,7 @@ function spider_job_post(string $job_name, string $cron_string, string $url, $da
         $format,
         $spider_rule,
         $closure_or_null,
+        $multi_insert_trace_key,
         $priority,
         $retry,
         $config_key
@@ -281,9 +285,36 @@ function spider_watch($config_key = 'spider', $memory_limit = 1048576)
 
         if ($res) {
 
-            $res['create_time'] = datetime();
+            if ($multi_insert_trace_key = $job['multi_insert_trace_key']) {
 
-            storage_insert($job_name, $res, $config_key);
+                $last_element = spider_last_data_query($job_name);
+
+                $insert_res = [];
+
+                foreach ($res as $element) {
+
+                    if ($last_element && $last_element[$multi_insert_trace_key] === $element[$multi_insert_trace_key]) {
+                        break;
+                    }
+
+                    $insert_res[] = $element;
+                }
+
+                $insert_res = array_reverse($insert_res);
+
+                foreach ($insert_res as $element) {
+
+                    $element['create_time'] = datetime();
+
+                    storage_insert($job_name, $element, $config_key);
+                }
+
+            } else {
+
+                $res['create_time'] = datetime();
+
+                storage_insert($job_name, $res, $config_key);
+            }
 
             _beanstalk_delete($fp, $id);
         } else {
@@ -343,7 +374,7 @@ function _spider_transfer_result($result, $format, $spider_rule)
 
         } elseif (is_string($spider_rule)) {
 
-            return array_get($array, $spider_rule, []);
+            return array_get($result_arr, $spider_rule, []);
         }
     }
 }/*}}}*/
@@ -355,10 +386,7 @@ function spider_run_get($url, string $format, $spider_rule, $closure_or_null = n
     $res = _spider_transfer_result($result, $format, $spider_rule);
 
     if ($closure_or_null) {
-        $tmp_res = call_user_func($closure_or_null, $res);
-        if ($tmp_res) {
-            $res = $tmp_res;
-        }
+        $res = call_user_func($closure_or_null, $res);
     }
 
     return $res;
@@ -371,10 +399,7 @@ function spider_run_post($url, $data, string $format, $spider_rule, $closure_or_
     $res = _spider_transfer_result($result, $format, $spider_rule);
 
     if ($closure_or_null) {
-        $tmp_res = call_user_func($closure_or_null, $res);
-        if ($tmp_res) {
-            $res = $tmp_res;
-        }
+        $res = call_user_func($closure_or_null, $res);
     }
 
     return $res;
@@ -391,12 +416,14 @@ function spider_data_query($job_name, array $selections = [],  array $queries = 
 
 function spider_last_data_query($job_name)
 {/*{{{*/
-    return spider_data_query(
+    $res = spider_data_query(
         $job_name,
         $selections = [],
         $queries = [],
-        $sorts = ['create_time' => -1],
+        $sorts = ['_id' => -1],
         $offset = 0,
         $limit = 1
     );
+
+    return reset($res);
 }/*}}}*/
