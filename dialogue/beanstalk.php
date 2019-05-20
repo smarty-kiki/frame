@@ -104,7 +104,7 @@ function _dialogue_topic_match_closure($content, closure $closure)
 
     foreach ($topics as $topic) {
 
-        foreach ((array) $topic['topic'] as $topic_string) {
+        foreach ($topic['topic'] as $topic_string) {
 
             list($matched_topic, $args) = dialogue_topic_match($content, $topic_string);
 
@@ -473,7 +473,7 @@ function dialogue_topic($topic, closure $closure)
     $topics = dialogue_topics();
 
     $topics[] = [
-        'topic' => $topic,
+        'topic' => (array) $topic,
         'closure' => $closure,
     ];
 
