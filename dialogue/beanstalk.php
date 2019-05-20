@@ -286,10 +286,6 @@ function _dialogue_content_match($content, $pattern)
 {/*{{{*/
     static $match_key = 0;
 
-    if (is_null($pattern)) {
-        return $content;
-    }
-
     if ($pattern instanceof closure) {
 
         return call_user_func($pattern, $content);
@@ -441,16 +437,17 @@ function dialogue_ask_and_wait($user_info, $ask, $pattern = null, $timeout = 60,
 
             $message = _dialogue_pull_message($user_tube, $timeout, $config_key);
 
-            $content = $message['content'];
-
             if (is_null($pattern)) {
-                return $content;
+                return $message;
             }
 
-            $matched = _dialogue_content_match($content, $pattern);
+            $matched = _dialogue_content_match($message['content'], $pattern);
 
             if (false !== $matched) {
-                return $matched;
+
+                $message['content'] = $matched;
+
+                return $content;
             } else {
                 dialogue_push_to_other_operator($message, $delay = 0, $priority = 10, $config_key);
             }
