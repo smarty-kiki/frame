@@ -282,13 +282,15 @@ function dialogue_push_to_other_operator($message, $delay = 0, $priority = 10, $
     return _dialogue_push_message($message, $tube, $delay, $priority, $config_key);
 }/*}}}*/
 
-function _dialogue_content_match($content, $pattern)
+function _dialogue_content_match($message, $pattern)
 {/*{{{*/
     static $match_key = 0;
 
+    $content = $message['content'];
+
     if ($pattern instanceof closure) {
 
-        return call_user_func($pattern, $content);
+        return call_user_func($pattern, $message);
 
     } elseif (is_array($pattern)) {
 
@@ -441,7 +443,7 @@ function dialogue_ask_and_wait($user_info, $ask, $pattern = null, $timeout = 60,
                 return $message;
             }
 
-            $matched = _dialogue_content_match($message['content'], $pattern);
+            $matched = _dialogue_content_match($message, $pattern);
 
             if (false !== $matched) {
 
