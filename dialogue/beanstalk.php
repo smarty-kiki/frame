@@ -269,7 +269,7 @@ function dialogue_push($user_info, $content, $is_sync = false, $delay = 0, $prio
 
 function dialogue_push_to_other_operator($message, $delay = 0, $priority = 10, $config_key = 'dialogue')
 {/*{{{*/
-    $user_info = unserialize($message['user_info']);
+    $user_info = $message['user_info'];
 
     $tubes = _dialogue_waiting_user_tubes($user_info);
 
