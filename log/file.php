@@ -15,3 +15,10 @@ function log_notice($message)
 
     error_log($message."\n", 3, $log['notice_path']);
 }/*}}}*/
+
+function log_module($module, $message)
+{/*{{{*/
+    $log = config('log');
+
+    error_log('['.$module.'] '.$message."\n", 3, $log['module_path']);
+}/*}}}*/

@@ -156,6 +156,8 @@ function _dialogue_pull_message($tube, $timeout = null, $config_key = 'dialogue'
 
     $message = unserialize($job_instance['body']);
 
+    log_module('dialogue', 'PULL '.$tube.' MESSAGE '.json_encode($message, JSON_UNESCAPED_UNICODE));
+
     if ($is_sync = array_key_exists('sync_user_tube', $message)) {
 
         _dialogue_force_say_sync(true);
@@ -239,6 +241,8 @@ function _dialogue_push($user_info, $content, $tube, $is_sync = false, $delay = 
 
 function _dialogue_push_message($message, $tube, $delay = 0, $priority = 10, $config_key = 'dialogue')
 {/*{{{*/
+    log_module('dialogue', 'PUSH '.$tube.' MESSAGE '.json_encode($message, JSON_UNESCAPED_UNICODE));
+
     $fp = _beanstalk_connection($config_key);
 
     _beanstalk_use_tube($fp, $tube);
