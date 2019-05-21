@@ -449,7 +449,7 @@ function dialogue_ask_and_wait($user_info, $ask, $pattern = null, $timeout = 60,
 
                 $message['content'] = $matched;
 
-                return $content;
+                return $message;
             } else {
                 dialogue_push_to_other_operator($message, $delay = 0, $priority = 10, $config_key);
             }
