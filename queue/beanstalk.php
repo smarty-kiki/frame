@@ -32,9 +32,23 @@ function _beanstalk_disconnect($fp)
     return fclose($fp);
 }/*}}}*/
 
-function _beanstalk_connection_read($fp)
+function _beanstalk_connection_read($fp, $data_length = null)
 {/*{{{*/
-    return stream_get_line($fp, 32768, "\r\n");
+    if ($data_length) {
+
+        $data = stream_get_contents($fp, $data_length + 2);
+        $meta = stream_get_meta_data($fp);
+
+        if ($meta['timed_out']) {
+            throw new RuntimeException('Connection timed out while reading data from socket.');
+        }
+
+        return rtrim($data, "\r\n");
+
+    } else {
+
+        return stream_get_line($fp, 16384, "\r\n");
+    }
 }/*}}}*/
 
 function _beanstalk_connection_write($fp, $data)
@@ -87,7 +101,7 @@ function _beanstalk_reserve($fp, $timeout = null)
     case 'RESERVED':
         return [
             'id' => (integer) strtok(' '),
-            'body' => _beanstalk_connection_read($fp),
+            'body' => _beanstalk_connection_read($fp, (integer) strtok(' ')),
         ];
     case 'DEADLINE_SOON':
     case 'TIMED_OUT':
@@ -195,7 +209,7 @@ function _beanstalk_peek_read($fp)
     case 'FOUND':
         return [
             'id' => (integer) strtok(' '),
-            'body' => _beanstalk_connection_read($fp),
+            'body' => _beanstalk_connection_read($fp, (integer) strtok(' ')),
         ];
     case 'NOT_FOUND':
     default:
@@ -263,7 +277,7 @@ function _beanstalk_stats_read($fp)
 
     switch ($status) {
     case 'OK':
-        return _beanstalk_connection_read($fp);
+        return _beanstalk_connection_read($fp, (integer) strtok(' '));
     default:
         _beanstalk_error($status);
         return false;
