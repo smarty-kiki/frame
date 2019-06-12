@@ -88,6 +88,21 @@ function _beanstalk_use_tube($fp, $tube)
     }
 }/*}}}*/
 
+function _beanstalk_pause_tube($fp, $tube, $delay)
+{
+    _beanstalk_connection_write($fp, sprintf('pause-tube %s %d', $tube, $delay));
+    $status = strtok(_beanstalk_connection_read($fp), ' ');
+
+    switch ($status) {
+    case 'PAUSED':
+        return true;
+    case 'NOT_FOUND':
+    default:
+        _beanstalk_error($status);
+        return false;
+    }
+}
+
 function _beanstalk_reserve($fp, $timeout = null)
 {/*{{{*/
     if (is_null($timeout)) {
