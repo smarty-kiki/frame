@@ -377,6 +377,8 @@ function _spider_transfer_result($result, $format, $spider_rule)
             return array_get($result_arr, $spider_rule, []);
         }
     }
+
+    return $result_arr;
 }/*}}}*/
 
 function spider_run_get($url, string $format, $spider_rule, $closure_or_null = null)
