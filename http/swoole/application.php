@@ -1,5 +1,71 @@
 <?php
 
+function _request($request = false)
+{/*{{{*/
+    static $container = null;
+
+    if ($request !== false) {
+
+        return $container = $request;
+    }
+
+    return $container;
+}/*}}}*/
+
+function _response($response = false)
+{/*{{{*/
+    static $container = null;
+
+    if ($response !== false) {
+
+        return $container = $response;
+    }
+
+    return $container;
+}/*}}}*/
+
+function http_server()
+{/*{{{*/
+    static $container = null;
+
+    if (is_null($container)) {
+
+        $config = config('swoole_server');
+
+        $container = $http = new Swoole\Http\Server($config['ip'], $config['port']);
+
+        $http->set($config['set']);
+
+        $http->on('request', function ($request, $response) {
+
+            _request($request); _response($response);
+
+            try {
+
+                list($matched_closure, $args) = route();
+
+                if ($matched_closure) {
+
+                    flush_action($matched_closure, $args, if_verify());
+                } else {
+
+                    not_found();
+                }
+
+            } catch (Exception $ex) {
+
+                http_ex_action($ex);
+            }
+
+            _request(null); _response(null);
+        });
+
+        $http->start();
+    }
+
+    return $container;
+}/*}}}*/
+
 /**
  * if is https.
  *
@@ -16,9 +82,13 @@ function is_https()
  * @return string
  */
 function uri()
-{
-    //todo::kiki
-}
+{/*{{{*/
+    $schema = is_https() ? 'https://' : 'http://';
+
+    $request = _request();
+
+    return $schema.$request->header['host'].$request->server['request_uri'];
+}/*}}}*/
 
 /**
  * Get the specified URI info.
@@ -28,18 +98,38 @@ function uri()
  * @return mixed
  */
 function uri_info($name = null)
-{
-    static $container = [];
+{/*{{{*/
+    $url = uri();
 
-    if (empty($container)) {
+    $uri_info = parse_url($url);
 
-        $url = uri();
+    return (null === $name) ? $uri_info : $uri_info[$name];
+}/*}}}*/
 
-        $container = parse_url($url);
+function _routers($method, $rule = null, closure $action = null)
+{/*{{{*/
+    static $routes = [];
+
+    if (is_null($rule)) {
+        return $routes[$method] ?? [];
     }
 
-    return (null === $name) ? $container : $container[$name];
-}
+    $rule_info = explode('/', $rule);
+
+    $rule_info[0] = $method;
+
+    $rule_info[] = '_action';
+
+    $rule = implode('.', $rule_info);
+
+    if (is_null($action)) {
+
+        throw new Exception('传入 rule 时必须传入 action 来注册路由响应闭包');
+    } else {
+
+        $routes = array_set($routes, $rule, $action);
+    }
+}/*}}}*/
 
 /**
  * Route.
@@ -48,25 +138,40 @@ function uri_info($name = null)
  *
  * @return array
  */
-function route($rule)
-{
-    $reg = '/^'.str_replace('\*', '([^\/]+?)', preg_quote($rule, '/')).'$/';
+function route()
+{/*{{{*/
+    $request = _request();
 
-    preg_match_all($reg, uri_info('path'), $matches);
+    $path = $request->server['request_uri'];
+    $method = $request->server['request_method'];
 
+    $path_parts = explode('/', $path);
+
+    array_shift($path_parts);
+    $path_parts[] = '_action';
+
+    $routes = _routers($method);
+    
     $args = [];
+    foreach ($path_parts as $path_part) {
 
-    if ($matched = !empty($matches[0])) {
+        if (isset($routes[$path_part])) {
 
-        unset($matches[0]);
+            $routes = $routes[$path_part];
 
-        foreach ($matches as $v) {
-            $args[] = $v[0];
+        } elseif ($path_part == '_action') {
+
+            return [false, []];
+
+        } elseif (isset($routes['*'])) {
+
+            $routes = $routes['*'];
+            $args[] = $path_part;
         }
     }
 
-    return [$matched, $args];
-}
+    return [$routes, $args];
+}/*}}}*/
 
 /**
  * Flush the action result.
@@ -75,7 +180,7 @@ function route($rule)
  * @param array   $args
  */
 function flush_action(closure $action, $args = [], closure $verify = null)
-{
+{/*{{{*/
     if (is_null($verify)) {
         $output = $action(...$args);
     } else {
@@ -83,10 +188,10 @@ function flush_action(closure $action, $args = [], closure $verify = null)
     }
 
     if (! is_null($output)) {
-        echo $output;
-        flush();
+
+        _response()->end($output);
     }
-}
+}/*}}}*/
 
 /**
  * Route for all method.
@@ -95,15 +200,12 @@ function flush_action(closure $action, $args = [], closure $verify = null)
  * @param closure $action
  */
 function if_any($rule, closure $action)
-{
-    list($matched, $args) = route($rule);
-
-    if ($matched) {
-
-        flush_action($action, $args, if_verify());
-        exit;
-    }
-}
+{/*{{{*/
+    if_get($rule, $action);
+    if_post($rule, $action);
+    if_put($rule, $action);
+    if_delete($rule, $action);
+}/*}}}*/
 
 /**
  * Route for get method.
@@ -112,13 +214,9 @@ function if_any($rule, closure $action)
  * @param closure $action
  */
 function if_get($rule, closure $action)
-{
-    if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-        return;
-    }
-
-    if_any($rule, $action);
-}
+{/*{{{*/
+    _routers('GET', $rule, $action);
+}/*}}}*/
 
 /**
  * Route for post method.
@@ -127,13 +225,9 @@ function if_get($rule, closure $action)
  * @param closure $action
  */
 function if_post($rule, closure $action)
-{
-    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        return;
-    }
-
-    if_any($rule, $action);
-}
+{/*{{{*/
+    _routers('POST', $rule, $action);
+}/*}}}*/
 
 /**
  * Route for put method.
@@ -142,13 +236,9 @@ function if_post($rule, closure $action)
  * @param closure $action
  */
 function if_put($rule, closure $action)
-{
-    if ($_SERVER['REQUEST_METHOD'] !== 'PUT') {
-        return;
-    }
-
-    if_any($rule, $action);
-}
+{/*{{{*/
+    _routers('PUT', $rule, $action);
+}/*}}}*/
 
 /**
  * Route for delete method.
@@ -157,13 +247,9 @@ function if_put($rule, closure $action)
  * @param closure $action
  */
 function if_delete($rule, closure $action)
-{
-    if ($_SERVER['REQUEST_METHOD'] !== 'DELETE') {
-        return;
-    }
-
-    if_any($rule, $action);
-}
+{/*{{{*/
+    _routers('DELETE', $rule, $action);
+}/*}}}*/
 
 /**
  * Get or set the verify closure.
@@ -171,7 +257,7 @@ function if_delete($rule, closure $action)
  * @param closure $action
  */
 function if_verify(closure $action = null)
-{
+{/*{{{*/
     static $container = null;
 
     if (!empty($action)) {
@@ -179,7 +265,7 @@ function if_verify(closure $action = null)
     }
 
     return $container;
-}
+}/*}}}*/
 
 /**
  * Get or set the 404 handler.
@@ -187,7 +273,7 @@ function if_verify(closure $action = null)
  * @param closure $action
  */
 function if_not_found(closure $action = null)
-{
+{/*{{{*/
     static $container = null;
 
     if (!empty($action)) {
@@ -195,7 +281,7 @@ function if_not_found(closure $action = null)
     }
 
     return $container;
-}
+}/*}}}*/
 
 /**
  * Redirect to 404.
@@ -203,22 +289,21 @@ function if_not_found(closure $action = null)
  * @param mix $action
  */
 function not_found($action = null)
-{
-    header('HTTP/1.1 404 Not Found');
-    header('status: 404 Not Found');
+{/*{{{*/
+    _response()->status(404);
 
     if ($action instanceof closure) {
         flush_action($action);
-        exit;
+        return;
     }
 
     $action = if_not_found();
 
     if ($action instanceof closure) {
         flush_action($action, func_get_args());
-        exit;
+        return;
     }
-}
+}/*}}}*/
 
 /**
  * Redirect to a URI.
@@ -227,17 +312,13 @@ function not_found($action = null)
  * @param bool   $forever
  */
 function redirect($uri, $forever = false)
-{
+{/*{{{*/
     if (empty($uri) || !is_string($uri)) {
         return $uri;
     }
 
-    if ($forever) {
-        header('HTTP/1.1 301 Moved Permanently');
-    }
-
-    header('Location: '.$uri);
-}
+    _response()->redirect($uri, $forever ? 302: 301);
+}/*}}}*/
 
 /**
  * Get specified _GET/_POST without filte XSS.
@@ -248,17 +329,19 @@ function redirect($uri, $forever = false)
  * @return mixed
  */
 function input_safe($name, $default = null)
-{
-    if (isset($_POST[$name])) {
-        return filter_input(INPUT_POST, $name, FILTER_SANITIZE_SPECIAL_CHARS);
+{/*{{{*/
+    $request = _request();
+
+    if (isset($request->post[$name])) {
+        return filter_var($request->post[$name], FILTER_SANITIZE_SPECIAL_CHARS);
     }
 
-    if (isset($_GET[$name])) {
-        return filter_input(INPUT_GET, $name, FILTER_SANITIZE_SPECIAL_CHARS);
+    if (isset($request->get[$name])) {
+        return filter_var($request->get[$name], FILTER_SANITIZE_SPECIAL_CHARS);
     }
 
     return $default;
-}
+}/*}}}*/
 
 /**
  * Get specified _GET, _POST.
@@ -269,17 +352,19 @@ function input_safe($name, $default = null)
  * @return mixed
  */
 function input($name, $default = null)
-{
-    if (isset($_POST[$name])) {
-        return $_POST[$name];
+{/*{{{*/
+    $request = _request();
+
+    if (isset($request->post[$name])) {
+        return $request->post[$name];
     }
 
-    if (isset($_GET[$name])) {
-        return $_GET[$name];
+    if (isset($request->get[$name])) {
+        return $request->get[$name];
     }
 
     return $default;
-}
+}/*}}}*/
 
 /**
  * Get specified _GET/_POST array.
@@ -289,7 +374,7 @@ function input($name, $default = null)
  * @return array
  */
 function input_list(...$names)
-{
+{/*{{{*/
     if (empty($names)) {
         return [];
     }
@@ -301,7 +386,7 @@ function input_list(...$names)
     }
 
     return $values;
-}
+}/*}}}*/
 
 /**
  * Get an item from Json Decode _POST using "dot" notation.
@@ -312,15 +397,11 @@ function input_list(...$names)
  * @return mix
  */
 function input_json($name, $default = null)
-{
-    static $post_data = null;
-
-    if (is_null($post_data)) {
-        $post_data = json_decode(input_post_raw(), true);
-    }
+{/*{{{*/
+    $post_data = json_decode(input_post_raw(), true);
 
     return array_get($post_data, $name, $default);
-}
+}/*}}}*/
 
 /**
  * Get items from Json Decode _POST using "dot" notation.
@@ -329,7 +410,7 @@ function input_json($name, $default = null)
  * @return array
  */
 function input_json_list(...$names)
-{
+{/*{{{*/
     if (empty($names)) {
         return [];
     }
@@ -341,21 +422,16 @@ function input_json_list(...$names)
     }
 
     return $values;
-}
+}/*}}}*/
 
 function input_xml($name, $default = null)
-{
-    static $post_data = null;
+{/*{{{*/
+    $raw_post_data = simplexml_load_string(input_post_raw(), 'SimpleXMLElement', LIBXML_NOCDATA);
 
-    if (is_null($post_data)) {
-
-        $raw_post_data = simplexml_load_string(input_post_raw(), 'SimpleXMLElement', LIBXML_NOCDATA);
-
-        $post_data = json_decode(json_encode($raw_post_data), true);
-    }
+    $post_data = json_decode(json_encode($raw_post_data), true);
 
     return array_get($post_data, $name, $default);
-}
+}/*}}}*/
 
 /**
  * Get items from Json Decode _POST using "dot" notation.
@@ -364,7 +440,7 @@ function input_xml($name, $default = null)
  * @return array
  */
 function input_xml_list(...$names)
-{
+{/*{{{*/
     if (empty($names)) {
         return [];
     }
@@ -376,11 +452,11 @@ function input_xml_list(...$names)
     }
 
     return $values;
-}
+}/*}}}*/
 
 function input_post_raw()
 {/*{{{*/
-    return file_get_contents('php://input');
+    return _request()->rawContent();
 }/*}}}*/
 
 /**
@@ -391,13 +467,15 @@ function input_post_raw()
  * @return mixed
  */
 function cookie_safe($name, $default = null)
-{
-    if (isset($_COOKIE[$name])) {
-        return filter_input(INPUT_COOKIE, $name, FILTER_SANITIZE_SPECIAL_CHARS);
+{/*{{{*/
+    $request = _request();
+
+    if (isset($request->cookie[$name])) {
+        return filter_var($request->cookie[$name], FILTER_SANITIZE_SPECIAL_CHARS);
     }
 
     return $default;
-}
+}/*}}}*/
 
 /**
  * Get specified _COOKIE.
@@ -407,13 +485,15 @@ function cookie_safe($name, $default = null)
  * @return mixed
  */
 function cookie($name, $default = null)
-{
-    if (isset($_COOKIE[$name])) {
-        return $_COOKIE[$name];
+{/*{{{*/
+    $request = _request();
+
+    if (isset($request->cookie[$name])) {
+        return $request->cookie[$name];
     }
 
     return $default;
-}
+}/*}}}*/
 
 /**
  * Get specified _COOKIE array.
@@ -423,7 +503,7 @@ function cookie($name, $default = null)
  * @return mixed
  */
 function cookie_list(...$names)
-{
+{/*{{{*/
     if (empty($names)) {
         return [];
     }
@@ -435,28 +515,32 @@ function cookie_list(...$names)
     }
 
     return $values;
-}
+}/*}}}*/
 
 function server_safe($name, $default = null)
-{
-    if (isset($_COOKIE[$name])) {
-        return filter_input(INPUT_SERVER, $name, FILTER_SANITIZE_SPECIAL_CHARS);
+{/*{{{*/
+    $request = _request();
+
+    if (isset($request->server[$name])) {
+        return filter_var($request->server[$name], FILTER_SANITIZE_SPECIAL_CHARS);
     }
 
     return $default;
-}
+}/*}}}*/
 
 function server($name, $default = null)
-{
-    if (isset($_SERVER[$name])) {
-        return $_SERVER[$name];
+{/*{{{*/
+    $request = _request();
+
+    if (isset($request->server[$name])) {
+        return $request->server[$name];
     }
 
     return $default;
-}
+}/*}}}*/
 
 function server_list(...$names)
-{
+{/*{{{*/
     if (empty($names)) {
         return [];
     }
@@ -468,7 +552,7 @@ function server_list(...$names)
     }
 
     return $values;
-}
+}/*}}}*/
 
 /**
  * Set or get view file path.
@@ -477,7 +561,7 @@ function server_list(...$names)
  * @return string
  */
 function view_path($path = null)
-{
+{/*{{{*/
     static $container = '';
 
     if (!empty($path)) {
@@ -485,10 +569,10 @@ function view_path($path = null)
     }
 
     return $container;
-}
+}/*}}}*/
 
 function view_compiler(closure $closure = null)
-{
+{/*{{{*/
     static $container = null;
 
     if (not_null($closure)) {
@@ -502,7 +586,7 @@ function view_compiler(closure $closure = null)
     }
 
     return $container;
-}
+}/*}}}*/
 
 /**
  * Render view.
@@ -511,7 +595,7 @@ function view_compiler(closure $closure = null)
  * @param array  $args
  */
 function render($view, $args = [])
-{
+{/*{{{*/
     if (!empty($args)) {
         extract($args);
     }
@@ -520,6 +604,7 @@ function render($view, $args = [])
 
     ob_start();
 
+    //todo::kiki
     include $render($view);
 
     $echo = ob_get_contents();
@@ -527,7 +612,7 @@ function render($view, $args = [])
     ob_end_clean();
 
     return $echo;
-}
+}/*}}}*/
 
 /**
  * include view and send arguments.
@@ -536,13 +621,14 @@ function render($view, $args = [])
  * @param array  $args
  */
 function include_view($view, $args = [])
-{
+{/*{{{*/
     if (!empty($args)) {
         extract($args);
     }
 
+    //todo::kiki
     include view_path().$view.'.php';
-}
+}/*}}}*/
 
 /**
  * Response 304 with ETag.
@@ -550,15 +636,17 @@ function include_view($view, $args = [])
  * @param string
  */
 function cache_with_etag($etag)
-{
-    if (isset($_SERVER['HTTP_IF_NONE_MATCH']) && $_SERVER['HTTP_IF_NONE_MATCH'] === $etag) {
-        header('HTTP/1.1 304 Not Modified');
+{/*{{{*/
+    $request = _request();
 
-        exit;
+    //todo::kiki 测试是否生效
+    if (isset($request->server['http_if_none_match']) && $request->server['http_if_none_match'] === $etag) {
+
+        _response()->status(304);
+    } else {
+        _response()->header('ETag', $etag);
     }
-
-    header('ETag: '.$etag);
-}
+}/*}}}*/
 
 /**
  * get client ip.
@@ -566,27 +654,17 @@ function cache_with_etag($etag)
  * @return string
  */
 function ip()
-{
-    static $container = null;
+{/*{{{*/
+    $request = _request();
 
-    if (is_null($container)) {
-        if (getenv('HTTP_CLIENT_IP') && strcasecmp(getenv('HTTP_CLIENT_IP'), 'unknown')) {
-            $ip = getenv('HTTP_CLIENT_IP');
-        } elseif (getenv('HTTP_X_FORWARDED_FOR') && strcasecmp(getenv('HTTP_X_FORWARDED_FOR'), 'unknown')) {
-            $ip = getenv('HTTP_X_FORWARDED_FOR');
-        } elseif (getenv('REMOTE_ADDR') && strcasecmp(getenv('REMOTE_ADDR'), 'unknown')) {
-            $ip = getenv('REMOTE_ADDR');
-        } elseif (isset($_SERVER['REMOTE_ADDR']) && $_SERVER['REMOTE_ADDR'] && strcasecmp($_SERVER['REMOTE_ADDR'], 'unknown')) {
-            $ip = $_SERVER['REMOTE_ADDR'];
-        } else {
-            $ip = 'unknown';
-        }
-
-        return $container = preg_replace('/^[^0-9]*?(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}).*$/', '\1', $ip);
+    if ($request->header['x-real-ip']) {
+        $ip = $request->header['x-real-ip'];
+    } else {
+        $ip = 'unknown';
     }
 
-    return $container;
-}
+    return preg_replace('/^[^0-9]*?(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}).*$/', '\1', $ip);
+}/*}}}*/
 
 /**
  * Get or set the exception handler.
@@ -594,7 +672,7 @@ function ip()
  * @param closure $action
  */
 function if_has_exception(closure $action = null)
-{
+{/*{{{*/
     static $container = null;
 
     if (!empty($action)) {
@@ -602,32 +680,33 @@ function if_has_exception(closure $action = null)
     }
 
     return $container;
-}
+}/*}}}*/
 
 function http_err_action($error_type, $error_message, $error_file, $error_line, $error_context = null)
-{
+{/*{{{*/
     $message = $error_message.' '.$error_file.' '.$error_line;
 
     http_ex_action(new Exception($message));
-}
+}/*}}}*/
 
 function http_ex_action($ex)
-{
+{/*{{{*/
     $action = if_has_exception();
 
     if ($action instanceof closure) {
-        flush_action($action, [$ex]);
-        exit;
-    }
 
-    throw $ex;
-}
+        flush_action($action, [$ex]);
+    } else {
+
+        throw $ex;
+    }
+}/*}}}*/
 
 function http_fatel_err_action()
-{
+{/*{{{*/
     $err = error_get_last();
 
     if (not_empty($err)) {
         http_err_action($err['type'], $err['message'], $err['file'], $err['line']);
     }
-}
+}/*}}}*/

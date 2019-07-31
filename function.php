@@ -392,6 +392,45 @@ function config_midware($file_name, $midware_name)
     return $configs[$identifier];
 }/*}}}*/
 
+function config_preload()
+{/*{{{*/
+    $dirs = config_dir();
+
+    $config_names = [];
+
+    foreach ($dirs as $dir) {
+
+        $files = scandir($dir);
+
+        $env_dir = $dir.'/'.env();
+
+        if (is_dir($env_dir)) {
+
+            $files = array_merge($files, scandir($env_dir));
+        }
+
+        foreach ($files as $file) {
+
+            if ($file{0} !== '.') {
+
+                if ((! is_dir($dir.'/'.$file)) && ! is_dir($env_dir.'/'.$file)) {
+
+                    $config_name = pathinfo($file, PATHINFO_FILENAME);
+
+                    if (! isset($config_names[$config_name])) {
+
+                        $config_names[$config_name] = true;
+
+                        config($config_name);
+                    }
+                }
+            }
+        }
+    }
+
+    return $config_names;
+}/*}}}*/
+
 function env()
 {/*{{{*/
     return $_SERVER['ENV'] ?? 'production';

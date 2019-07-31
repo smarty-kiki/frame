@@ -449,7 +449,7 @@ function cookie_list(...$names)
 
 function server_safe($name, $default = null)
 {
-    if (isset($_COOKIE[$name])) {
+    if (isset($_SERVER[$name])) {
         return filter_input(INPUT_SERVER, $name, FILTER_SANITIZE_SPECIAL_CHARS);
     }
 
