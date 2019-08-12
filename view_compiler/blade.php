@@ -1,5 +1,59 @@
 <?php 
 
+define('BLADE_STREAM_SCHEMA', 'blade');
+
+class blade_stream
+{/*{{{*/
+    private $string;
+    private $position;
+
+    private static $streams = [];
+
+    public static function stream_write($path, $template)
+    {/*{{{*/
+        return self::$streams[$path] = $template;
+    }/*}}}*/
+
+    public static function has_stream($path)
+    {/*{{{*/
+        return isset(self::$streams[$path]);
+    }/*}}}*/
+
+    public static function generate_stream_path($view)
+    {/*{{{*/
+        return BLADE_STREAM_SCHEMA.'://'.$view;
+    }/*}}}*/
+
+    public function stream_open($path, $mode, $options, &$opened_path)
+    {/*{{{*/
+        $url_info = parse_url($path);
+        $path = $url_info["host"].($url_info['path'] ?? '');
+
+        $this->string = self::$streams[$path];
+        $this->position = 0;
+        return true;
+    }/*}}}*/
+
+    public function stream_read($count)
+    {/*{{{*/
+        $ret = substr($this->string, $this->position, $count);
+
+        $this->position += strlen($ret);
+
+        return $ret;
+    }/*}}}*/
+
+    public function stream_eof()
+    {/*{{{*/
+    }/*}}}*/
+
+    public function stream_stat()
+    {/*{{{*/
+    }/*}}}*/
+}/*}}}*/
+
+stream_wrapper_register(BLADE_STREAM_SCHEMA, "blade_stream");
+
 function _blade_regular($compiler)
 {/*{{{*/
     return '/(?<!\w)(\s*)@'.$compiler.'(\s*\(.*\))/';
@@ -122,11 +176,15 @@ function blade($template)
 
 function blade_eval($template, $args = [])
 {/*{{{*/
+    $path = uniqid('template_', true);
+
+    blade_stream::stream_write($path, blade($template));
+
     extract($args);
 
     ob_start();
 
-    eval('?>'.blade($template).'<?');
+    include(blade_stream::generate_stream_path($path));
 
     $echo = ob_get_contents();
 
@@ -141,25 +199,12 @@ function blade_view_compiler($view)
 
     $view_path = view_path();
 
-    $is_md5 = array_get($config, 'compiled_md5_path', true);
+    $cache_opened = array_get($config, 'compiled_cache', true);
     $view_compiled_path = array_get($config, 'compiled_path', $view_path);
 
     $view_file = $view_path.$view.'.php';
 
-    if ($is_md5) {
-
-        $template = file_get_contents($view_file);
-
-        $compiled_file = $view_compiled_path.md5($template).'.blade.php';
-
-        if (! is_file($compiled_file)) {
-
-            file_put_contents($compiled_file, blade($template));
-        }
-
-        return $compiled_file;
-
-    } else {
+    if ($cache_opened) {
 
         $compiled_file = $view_compiled_path.str_replace('/', '-', $view).'.blade.php';
 
@@ -171,6 +216,14 @@ function blade_view_compiler($view)
         }
 
         return $compiled_file;
+    } else {
+
+        if (! blade_stream::has_stream($view)) {
+
+            blade_stream::stream_write($view, blade(file_get_contents($view_file)));
+        }
+
+        return blade_stream::generate_stream_path($view);
     }
 }/*}}}*/
 
