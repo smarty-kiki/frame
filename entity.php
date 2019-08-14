@@ -20,6 +20,14 @@ abstract class entity implements JsonSerializable, Serializable
     public $attributes = [];
     protected $json_attributes = [];
 
+    public static $struct_type_maps = [
+        'varchar' => 'text',
+        'text' => 'text',
+        'int' => 'number',
+        'bigint' => 'number',
+        'enum' => 'enum',
+    ];
+
     public static $entity_display_name = '';
     public static $entity_description = '';
     public static $struct_types = [];
@@ -48,6 +56,21 @@ abstract class entity implements JsonSerializable, Serializable
         local_cache_set($static);
 
         return $static;
+    }
+
+    final public static function convert_struct_format($datatype, $struct_format = null)
+    {
+        if (is_array($struct_format)) {
+            return 'enum';
+        }
+
+        foreach (self::$struct_type_maps as $pattern => $type) {
+            if (stristr($datatype, $pattern)) {
+                return $type;
+            }
+        }
+
+        return 'text';
     }
 
     final public static function generate_id()
