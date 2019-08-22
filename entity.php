@@ -353,6 +353,11 @@ class null_entity extends entity
 
         return self::create($property);
     }
+
+    public function __toString()
+    {
+        return '空';
+    }
 }/*}}}*/
 
 abstract class relationship_ref
