@@ -393,6 +393,11 @@ function input_post_raw()
     return file_get_contents('php://input');
 }/*}}}*/
 
+function input_file($name, $default = [])
+{/*{{{*/
+    return $_FILES[$name] ?? $default;
+}/*}}}*/
+
 /**
  * Get specified cookie without filte XSS.
  *
