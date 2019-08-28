@@ -93,6 +93,11 @@ function _blade_compile_comments($value)
     return preg_replace('/{{--((.|\s)*?)--}}/', '<?php /*$1*/ ?>', $value);
 }/*}}}*/
 
+function _blade_compile_php_code($value)
+{/*{{{*/
+    return preg_replace('/@php((.|\s)*?)@endphp/', '<?php $1 ?>', $value);
+}/*}}}*/
+
 function _blade_compile_escaped_echos($value)
 {/*{{{*/
     $pattern = '/{{{\s*(.+?)\s*}}}/s';
@@ -164,6 +169,7 @@ function blade($template)
         'else',
         'unless',
         'endunless',
+        'php_code',
     );
 
     foreach ($compilers as $compiler)
