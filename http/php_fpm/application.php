@@ -18,6 +18,12 @@ function is_https()
     return false;
 }
 
+function is_ajax()
+{
+    return (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest')
+        || (! empty($_POST['VAR_AJAX_SUBMIT']) || ! empty($_GET['VAR_AJAX_SUBMIT']) ? true : false);
+}
+
 /**
  * Get the current URI.
  *
