@@ -448,7 +448,15 @@ function queue_watch($tube = 'default', $config_key = 'default', $memory_limit =
 
         $job = queue_job_pickup($job_name);
 
-        $res = call_user_func_array($job['closure'], [$data, $retry, $id]);
+        try {
+
+            $res = false;
+            $res = call_user_func_array($job['closure'], [$data, $retry, $id]);
+
+        } catch (exception $exception) {
+
+            log_exception($exception);
+        }
 
         if ($res) {
             _beanstalk_delete($fp, $id);

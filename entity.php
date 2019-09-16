@@ -548,6 +548,17 @@ class dao
         $this->with_deleted = $with_deleted;
     }/*}}}*/
 
+    final protected function with_deleted_sql($alias = null)
+    {/*{{{*/
+        $alias = $alias ? $alias.'.': '';
+
+        if ($this->with_deleted) {
+            return '';
+        } else {
+            return 'and '.$alias.'delete_time is null';
+        }
+    }/*}}}*/
+
     public function find($id_or_ids)
     {/*{{{*/
         if (is_array($ids = $id_or_ids)) {
