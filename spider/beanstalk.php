@@ -304,12 +304,22 @@ function spider_watch($config_key = 'spider', $memory_limit = 1048576)
 
                 foreach ($insert_res as $element) {
 
+                    if (is_string($element)) {
+                        log_module('spider', print_r($element, true));
+                        log_module('spider', print_r($last_element, true));
+                    }
+
                     $element['create_time'] = datetime();
 
                     storage_insert($job_name, $element, $config_key);
+
                 }
 
             } else {
+
+                if (is_string($res)) {
+                    log_module('spider', print_r($res, true));
+                }
 
                 $res['create_time'] = datetime();
 

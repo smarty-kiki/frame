@@ -108,7 +108,7 @@ function array_divide($array)
     return array(array_keys($array), array_values($array));
 }/*}}}*/
 
-function array_build($array, closure $callback)
+function array_build($array, $callback)
 {/*{{{*/
     $results = [];
 
