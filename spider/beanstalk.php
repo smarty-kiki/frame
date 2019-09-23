@@ -277,10 +277,10 @@ function spider_watch($config_key = 'spider', $memory_limit = 1048576)
 
         if ('get' == $job['method']) {
 
-            $res = spider_run_get($url?:$job['url'], $job['format'], $job['rule'], $job['closure']);
+            $res = spider_run_get($url?:$job['url'], $job['format'], $job['rule']);
         } else {
 
-            $res = spider_run_post($url?:$job['url'], $data?:$job['data'], $job['format'], $job['rule'], $job['closure']);
+            $res = spider_run_post($url?:$job['url'], $data?:$job['data'], $job['format'], $job['rule']);
         }
 
         if ($res) {
@@ -309,6 +309,10 @@ function spider_watch($config_key = 'spider', $memory_limit = 1048576)
                         log_module('spider', print_r($last_element, true));
                     }
 
+                    if ($job['closure']) {
+                        $element = call_user_func($job['closure'], $element);
+                    }
+
                     $element['create_time'] = datetime();
 
                     storage_insert($job_name, $element, $config_key);
@@ -319,6 +323,10 @@ function spider_watch($config_key = 'spider', $memory_limit = 1048576)
 
                 if (is_string($res)) {
                     log_module('spider', print_r($res, true));
+                }
+
+                if ($job['closure']) {
+                    $res = call_user_func($job['closure'], $res);
                 }
 
                 $res['create_time'] = datetime();
@@ -391,30 +399,18 @@ function _spider_transfer_result($result, $format, $spider_rule)
     return $result_arr;
 }/*}}}*/
 
-function spider_run_get($url, string $format, $spider_rule, $closure_or_null = null)
+function spider_run_get($url, string $format, $spider_rule)
 {/*{{{*/
     $result = remote_get($url, 30);
 
-    $res = _spider_transfer_result($result, $format, $spider_rule);
-
-    if ($closure_or_null) {
-        $res = call_user_func($closure_or_null, $res);
-    }
-
-    return $res;
+    return _spider_transfer_result($result, $format, $spider_rule);
 }/*}}}*/
 
-function spider_run_post($url, $data, string $format, $spider_rule, $closure_or_null = null)
+function spider_run_post($url, $data, string $format, $spider_rule)
 {/*{{{*/
     $result = remote_post($url, $data, 30);
 
-    $res = _spider_transfer_result($result, $format, $spider_rule);
-
-    if ($closure_or_null) {
-        $res = call_user_func($closure_or_null, $res);
-    }
-
-    return $res;
+    return _spider_transfer_result($result, $format, $spider_rule);
 }/*}}}*/
 
 /**
