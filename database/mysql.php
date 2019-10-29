@@ -330,6 +330,42 @@ function db_simple_update($table, array $wheres, array $data, $config_key = 'def
     return db_update($sql_template, $binds, $config_key);
 }/*}}}*/
 
+function db_simple_multi_update($table, array $datas, $where_column = 'id', $config_key = 'default')
+{/*{{{*/
+    $set_sqls = $binds = $where_values = [];
+
+    $keys = array_keys(current($datas));
+
+    foreach ($keys as $column) {
+
+        if ($column == $where_column) {
+            continue;
+        }
+
+        $set_sql = sprintf("`$column` = case `$where_column`\n");
+
+        foreach ($datas as $i => $data) {
+
+            $when_bind_key = ":$where_column$i";
+            $then_bind_key = ":$column$i";
+
+            $set_sql .= "    when $when_bind_key then $then_bind_key\n";
+
+            $binds[$when_bind_key] = $data[$where_column];
+            $binds[$then_bind_key] = $data[$column];
+            $where_values[] = $data[$where_column];
+        }
+        $set_sqls[] = $set_sql."end";
+    }
+
+    $set_sql_str = implode(",\n", $set_sqls);
+
+    return db_update(
+        "update `$table` set\n$set_sql_str where `$where_column` in :where_values",
+        $binds,
+        $config_key);
+}/*}}}*/
+
 function db_simple_delete($table, array $wheres, $config_key = 'default')
 {/*{{{*/
     list($where, $binds) = db_simple_where_sql($wheres);
