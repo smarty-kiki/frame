@@ -346,8 +346,8 @@ function db_simple_multi_update($table, array $datas, $where_column = 'id', $con
 
         foreach ($datas as $i => $data) {
 
-            $when_bind_key = ":$where_column$i";
-            $then_bind_key = ":$column$i";
+            $when_bind_key = ':'.$where_column.'_'.$i.'_'.$column;
+            $then_bind_key = ':'.$column.'_'.$i;
 
             $set_sql .= "    when $when_bind_key then $then_bind_key\n";
 
@@ -359,6 +359,8 @@ function db_simple_multi_update($table, array $datas, $where_column = 'id', $con
     }
 
     $set_sql_str = implode(",\n", $set_sqls);
+
+    $binds[':where_values'] = $where_values;
 
     return db_update(
         "update `$table` set\n$set_sql_str where `$where_column` in :where_values",
