@@ -33,7 +33,7 @@ function if_unit_of_work_executed($action = null)
     return $container;
 }
 
-function if_unit_of_work_disturbed($action = null, $ex = null)
+function if_unit_of_work_disturbed($action = null)
 {
     static $container = null;
 
