@@ -117,6 +117,7 @@ function if_any($rule, closure $action)
     if ($matched) {
 
         flush_action($action, $args, if_verify());
+        trigger_redirect();
         exit;
     }
 }
@@ -242,18 +243,36 @@ function not_found($action = null)
  * @param string $uri
  * @param bool   $forever
  */
-function redirect($uri, $forever = false)
+function redirect($uri = null, $forever = false)
 {
-    if (empty($uri) || !is_string($uri)) {
-        return $uri;
+    static $container = [];
+
+    if (! is_null($uri)) {
+
+        $container = [
+            'uri' => $uri,
+            'forever' => $forever,
+        ];
     }
 
-    if ($forever) {
-        header('HTTP/1.1 301 Moved Permanently');
-    }
-
-    header('Location: '.$uri);
+    return $container;
 }
+
+function trigger_redirect()
+{/*{{{*/
+    $redirect_info = redirect();
+
+    if (! empty($redirect_info['uri'])) {
+
+        if ($redirect_info['forever']) {
+            header('HTTP/1.1 301 Moved Permanently');
+        } else {
+            header('HTTP/1.1 302 Found');
+        }
+
+        header('Location: '.$redirect_info['uri']);
+    }
+}/*}}}*/
 
 /**
  * Get specified _GET/_POST without filte XSS.
