@@ -20,26 +20,18 @@ abstract class entity implements JsonSerializable, Serializable
     public $attributes = [];
     protected $json_attributes = [];
 
-    public static $struct_type_maps = [
-        'varchar' => 'text',
-        'text' => 'text',
-        'int' => 'number',
-        'bigint' => 'number',
-        'enum' => 'enum',
-    ];
-
     public static $entity_display_name = '';
     public static $entity_description = '';
     public static $struct_types = [];
     public static $struct_display_names = [];
     public static $struct_descriptions = [];
-    public static $struct_formats = [];
-    public static $struct_format_descriptions = [];
 
     public static $null_entity_mock_attributes = [];
 
     private $relationships = [];
     private $relationship_refs = [];
+
+    abstract protected function struct_formaters($property);
 
     protected static function init()
     {
@@ -56,21 +48,6 @@ abstract class entity implements JsonSerializable, Serializable
         local_cache_set($static);
 
         return $static;
-    }
-
-    final public static function convert_struct_format($datatype, $struct_format = null)
-    {
-        if (is_array($struct_format)) {
-            return 'enum';
-        }
-
-        foreach (self::$struct_type_maps as $pattern => $type) {
-            if (stristr($datatype, $pattern)) {
-                return $type;
-            }
-        }
-
-        return 'text';
     }
 
     final public static function generate_id()
@@ -222,16 +199,21 @@ abstract class entity implements JsonSerializable, Serializable
 
         if (array_key_exists($property, $this->attributes)) {
 
-            if (isset(static::$struct_formats[$property])) {
+            if ($formaters = $this->struct_formaters($property)) {
 
-                $format = static::$struct_formats[$property];
+                if (static::$struct_types[$property] === 'enum') {
 
-                $format_description = static::$struct_format_descriptions[$property] ?? $property.' 格式错误';
-
-                if (is_array($format)) {
-                    otherwise(isset($format[$value]), $format_description);
+                    otherwise(isset($formaters[$value]), "$property 的值 $value 未在枚举范围中");
                 } else {
-                    otherwise(preg_match($format, $value), $format_description);
+
+                    foreach ($formaters as $formater) {
+
+                        if (isset($formater['reg'])) {
+                            otherwise(preg_match($formater['reg'], $value), $formater['failed_message']);
+                        } elseif (isset($formater['function'])) {
+                            otherwise(call_user_func($formater['function'], $value), $formater['failed_message']);
+                        }
+                    }
                 }
             }
 
@@ -314,6 +296,8 @@ class null_entity extends entity
 {
     /*{{{*/
     private $mock_entity_name = null;
+
+    protected function struct_formaters($property) { }
 
     public static function create($mock_entity_name = null)
     {

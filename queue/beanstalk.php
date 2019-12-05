@@ -89,7 +89,7 @@ function _beanstalk_use_tube($fp, $tube)
 }/*}}}*/
 
 function _beanstalk_pause_tube($fp, $tube, $delay)
-{
+{/*{{{*/
     _beanstalk_connection_write($fp, sprintf('pause-tube %s %d', $tube, $delay));
     $status = strtok(_beanstalk_connection_read($fp), ' ');
 
@@ -101,7 +101,7 @@ function _beanstalk_pause_tube($fp, $tube, $delay)
         _beanstalk_error($status);
         return false;
     }
-}
+}/*}}}*/
 
 function _beanstalk_reserve($fp, $timeout = null)
 {/*{{{*/
@@ -408,6 +408,13 @@ function queue_push($job_name, array $data = [], $delay = 0)
     );
 
     return $id;
+}/*}}}*/
+
+function queue_pause($tube = 'default', $config_key = 'default', $delay = 3600)
+{/*{{{*/
+    $fp = _beanstalk_connection($config_key);
+
+    _beanstalk_pause_tube($fp, $tube, $delay);
 }/*}}}*/
 
 function queue_watch($tube = 'default', $config_key = 'default', $memory_limit = 1048576)
