@@ -80,7 +80,7 @@ abstract class entity implements JsonSerializable, Serializable
         return $this->just_deleted;
     }
 
-    final public function delete()
+    public function delete()
     {
         $this->just_deleted = true;
         $this->delete_time = datetime();
@@ -201,7 +201,7 @@ abstract class entity implements JsonSerializable, Serializable
 
             if ($formaters = $this->struct_formaters($property)) {
 
-                if (static::$struct_types[$property] === 'enum') {
+                if (static::$struct_data_types[$property] === 'enum') {
 
                     otherwise(isset($formaters[$value]), "$property 的值 $value 未在枚举范围中");
                 } else {
