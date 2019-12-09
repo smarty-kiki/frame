@@ -31,7 +31,7 @@ abstract class entity implements JsonSerializable, Serializable
     private $relationships = [];
     private $relationship_refs = [];
 
-    abstract protected function struct_formaters($property);
+    abstract public static function struct_formaters($property);
 
     protected static function init()
     {
@@ -199,7 +199,7 @@ abstract class entity implements JsonSerializable, Serializable
 
         if (array_key_exists($property, $this->attributes)) {
 
-            if ($formaters = $this->struct_formaters($property)) {
+            if ($formaters = static::struct_formaters($property)) {
 
                 if (static::$struct_data_types[$property] === 'enum') {
 
@@ -297,7 +297,7 @@ class null_entity extends entity
     /*{{{*/
     private $mock_entity_name = null;
 
-    protected function struct_formaters($property) { }
+    public static function struct_formaters($property) { }
 
     public static function create($mock_entity_name = null)
     {
