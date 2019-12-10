@@ -892,7 +892,7 @@ class dao
         $binds[':old_version'] = $entity->version;
 
         foreach ($this->get_dirty($entity) as $column => $value) {
-            $update[] = "$column = :$column";
+            $update[] = "`$column` = :$column";
             $binds[":$column"] = $value;
         }
 
