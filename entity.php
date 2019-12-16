@@ -294,6 +294,7 @@ abstract class entity implements JsonSerializable, Serializable
 
 class null_entity extends entity
 {
+    public $id = 0;
     /*{{{*/
     private $mock_entity_name = null;
 
@@ -319,10 +320,6 @@ class null_entity extends entity
 
     public function __get($property)
     {
-        if ($property === 'id') {
-            return 0;
-        }
-
         $mock_entity_name = $this->mock_entity_name;
 
         if (! is_null($mock_entity_name)) {
