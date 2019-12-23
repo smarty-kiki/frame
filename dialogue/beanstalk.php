@@ -79,21 +79,28 @@ function dialogue_topics($topics = null)
 
 function dialogue_topic_match($content, $topic)
 {/*{{{*/
-    $reg = '/^'.str_replace('\*', '([^\/]+?)', preg_quote($topic, '/')).'$/';
+    if (is_string($topic)) {
 
-    preg_match_all($reg, $content, $matches);
+        $reg = '/^'.str_replace('\*', '([^\/]+?)', preg_quote($topic, '/')).'$/';
 
-    $args = [];
+        preg_match_all($reg, $content, $matches);
 
-    if ($matched = !empty($matches[0])) {
-        unset($matches[0]);
+        $args = [];
 
-        foreach ($matches as $v) {
-            $args[] = $v[0];
+        if ($matched = !empty($matches[0])) {
+            unset($matches[0]);
+
+            foreach ($matches as $v) {
+                $args[] = $v[0];
+            }
         }
-    }
 
-    return [$matched, $args];
+        return [$matched, $args];
+
+    } elseif ($topic instanceof closure) {
+
+        return call_user_func($topic, $content);
+    }
 }/*}}}*/
 
 function _dialogue_topic_match_closure($content, closure $closure)
