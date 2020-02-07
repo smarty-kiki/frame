@@ -25,6 +25,7 @@ abstract class entity implements JsonSerializable, Serializable
     public static $struct_data_types = [];
     public static $struct_display_names = [];
     public static $struct_descriptions = [];
+    public static $struct_is_required = [];
 
     public static $null_entity_mock_attributes = [];
 
@@ -201,17 +202,20 @@ abstract class entity implements JsonSerializable, Serializable
 
             if ($formaters = static::struct_formaters($property)) {
 
-                if (static::$struct_data_types[$property] === 'enum') {
+                if (static::$struct_is_required[$property] || $value !== '') {
 
-                    otherwise(isset($formaters[$value]), "$property 的值 $value 未在枚举范围中");
-                } else {
+                    if (static::$struct_data_types[$property] === 'enum') {
 
-                    foreach ($formaters as $formater) {
+                        otherwise(isset($formaters[$value]), "$property 的值 $value 未在枚举范围中");
+                    } else {
 
-                        if (isset($formater['reg'])) {
-                            otherwise(preg_match($formater['reg'], $value), $formater['failed_message']);
-                        } elseif (isset($formater['function'])) {
-                            otherwise(call_user_func($formater['function'], $value), $formater['failed_message']);
+                        foreach ($formaters as $formater) {
+
+                            if (isset($formater['reg'])) {
+                                otherwise(preg_match($formater['reg'], $value), $formater['failed_message']);
+                            } elseif (isset($formater['function'])) {
+                                otherwise(call_user_func($formater['function'], $value), $formater['failed_message']);
+                            }
                         }
                     }
                 }
@@ -1030,7 +1034,7 @@ function input_entity($entity_name, $message = null, $name = null)
 function relationship_batch_load($entities, $relationship_chain)
 {
     if (empty($entities)) {
-        return;
+        return [];
     }
 
     if ($entities instanceof entity) {
