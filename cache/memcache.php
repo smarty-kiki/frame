@@ -47,7 +47,7 @@ function cache_get($key, $config_key = 'default')
     });
 }/*}}}*/
 
-function cache_multi_get($keys, $config_key = 'default')
+function cache_multi_get(array $keys, $config_key = 'default')
 {/*{{{*/
     return _memcache_cache_closure($config_key, function ($connection) use ($keys) {
 
@@ -69,7 +69,7 @@ function cache_set($key, $value, $expires = 0, $config_key = 'default')
     });
 }/*}}}*/
 
-function cache_add($key, $value, $expires, $config_key = 'default')
+function cache_add($key, $value, $expires = 0, $config_key = 'default')
 {/*{{{*/
     return _memcache_cache_closure($config_key, function ($connection) use ($key, $value, $expires) {
 
@@ -78,7 +78,7 @@ function cache_add($key, $value, $expires, $config_key = 'default')
     });
 }/*}}}*/
 
-function cache_replace($key, $value, $expires, $config_key = 'default')
+function cache_replace($key, $value, $expires = 0, $config_key = 'default')
 {/*{{{*/
     return _memcache_cache_closure($config_key, function ($connection) use ($key, $value, $expires) {
 
@@ -96,7 +96,7 @@ function cache_delete($key, $config_key = 'default')
     });
 }/*}}}*/
 
-function cache_multi_delete($keys, $config_key = 'default')
+function cache_multi_delete(array $keys, $config_key = 'default')
 {/*{{{*/
     return _memcache_cache_closure($config_key, function ($connection) use ($keys) {
 
@@ -107,7 +107,7 @@ function cache_multi_delete($keys, $config_key = 'default')
     });
 }/*}}}*/
 
-function cache_increment($key, $number = 1, $expires = 86400, $config_key = 'default')
+function cache_increment($key, $number = 1, $expires = 0, $config_key = 'default')
 {/*{{{*/
     return _memcache_cache_closure($config_key, function ($connection) use ($key, $number, $expires) {
 
@@ -118,7 +118,7 @@ function cache_increment($key, $number = 1, $expires = 86400, $config_key = 'def
     });
 }/*}}}*/
 
-function cache_decrement($key, $number = 1, $expires = 86400, $config_key = 'default')
+function cache_decrement($key, $number = 1, $expires = 0, $config_key = 'default')
 {/*{{{*/
     return _memcache_cache_closure($config_key, function ($connection) use ($key, $number, $expires) {
 
@@ -127,6 +127,21 @@ function cache_decrement($key, $number = 1, $expires = 86400, $config_key = 'def
         return memcache_decrement($connection, (string) $key, (int) $number);
 
     });
+}/*}}}*/
+
+function cache_keys($pattern = '*', $config_key = 'default')
+{/*{{{*/
+    throw new exception('function '.__FUNCTION__.' not implement in memcache');
+}/*}}}*/
+
+function cache_hmset($key, array $array, $expires = 0, $config_key = 'default')
+{/*{{{*/
+    throw new exception('function '.__FUNCTION__.' not implement in memcache');
+}/*}}}*/
+
+function cache_hmget($key, array $fields, $config_key = 'default')
+{/*{{{*/
+    throw new exception('function '.__FUNCTION__.' not implement in memcache');
 }/*}}}*/
 
 function cache_close()
