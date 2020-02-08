@@ -1,22 +1,33 @@
 <?php
-/**
- *  todo::close
- */
 
-function _oracle_connection($host, $port, $database, $username, $password, $charset, $options = [])
+function _oracle_connection(array $config)
 {/*{{{*/
     static $container = [];
 
-    $dsn = "oci:dbname=//{$host}:{$port}/{$database};charset={$charset}";
+    if (empty($config)) {
 
-    $identifier = $dsn.'|'.$username.'|'.$password;
+        return $container = [];
+    } else {
 
-    if (!isset($container[$identifier])) {
+        $host = $config['host'];
+        $port = $config['port'];
+        $database = $config['database'];
+        $username = $config['username'];
+        $password = $config['password'];
+        $charset = $config['charset'];
+        $options = $config['options'];
 
-        $container[$identifier] = new PDO($dsn, $username, $password, $options);
+        $dsn = "oci:dbname=//{$host}:{$port}/{$database};charset={$charset}";
+
+        $identifier = $dsn.'|'.$username.'|'.$password;
+
+        if (!isset($container[$identifier])) {
+
+            $container[$identifier] = new PDO($dsn, $username, $password, $options);
+        }
+
+        return $container[$identifier];
     }
-
-    return $container[$identifier];
 }/*}}}*/
 
 function _oracle_database_closure($config_key, $type, closure $closure)
@@ -25,15 +36,15 @@ function _oracle_database_closure($config_key, $type, closure $closure)
 
     $type = db_force_type_write()? 'write': $type;
 
-    $connection = _oracle_connection(
-        $host = array_rand($config[$type]),
-        $port = $config[$type][$host],
-        $config['database'],
-        $config['username'],
-        $config['password'],
-        $config['charset'],
-        $config['options']
-    );
+    $connection = _oracle_connection([
+        'host' => $host = array_rand($config[$type]),
+        'port' => $port = $config[$type][$host],
+        'database' => $config['database'],
+        'username' => $config['username'],
+        'password' => $config['password'],
+        'charset' => $config['charset'],
+        'options' => $config['options'],
+    ]);
 
     return call_user_func($closure, $connection);
 }/*}}}*/
@@ -216,6 +227,11 @@ function db_transaction(closure $action, $config_key = 'default')
     });
 }/*}}}*/
 
+function db_close()
+{/*{{{*/
+    return _oracle_connection([]);
+}/*}}}*/
+
 function db_simple_where_sql(array $wheres)
 {/*{{{*/
     if (empty($wheres)) {
@@ -292,6 +308,44 @@ function db_simple_update($table, array $wheres, array $data, $config_key = 'def
     return db_update($sql_template, $binds, $config_key);
 }/*}}}*/
 
+function db_simple_multi_update($table, array $datas, $where_column = 'id', $config_key = 'default')
+{/*{{{*/
+    $set_sqls = $binds = $where_values = [];
+
+    $keys = array_keys(current($datas));
+
+    foreach ($keys as $column) {
+
+        if ($column == $where_column) {
+            continue;
+        }
+
+        $set_sql = sprintf("`$column` = case `$where_column`\n");
+
+        foreach ($datas as $i => $data) {
+
+            $when_bind_key = ':'.$where_column.'_'.$i.'_'.$column;
+            $then_bind_key = ':'.$column.'_'.$i;
+
+            $set_sql .= "    when $when_bind_key then $then_bind_key\n";
+
+            $binds[$when_bind_key] = $data[$where_column];
+            $binds[$then_bind_key] = $data[$column];
+            $where_values[] = $data[$where_column];
+        }
+        $set_sqls[] = $set_sql."end";
+    }
+
+    $set_sql_str = implode(",\n", $set_sqls);
+
+    $binds[':where_values'] = $where_values;
+
+    return db_update(
+        "update `$table` set\n$set_sql_str where `$where_column` in :where_values",
+        $binds,
+        $config_key);
+}/*}}}*/
+
 function db_simple_delete($table, array $wheres, $config_key = 'default')
 {/*{{{*/
     list($where, $binds) = db_simple_where_sql($wheres);
@@ -328,11 +382,11 @@ function db_simple_query_indexed($table, $indexed, array $wheres, $option_sql = 
     return $res;
 }/*}}}*/
 
-function db_simple_query_value($table, $value, array $wheres, $option_sql = '', $config_key = 'default') {}
+function db_simple_query_value($table, $value, array $wheres, $option_sql = '', $config_key = 'default')
 {/*{{{*/
-  list($where, $binds) = db_simple_where_sql($wheres);
+    list($where, $binds) = db_simple_where_sql($wheres);
 
-  $row = db_query_value($value, "select `$value` from `$table` where $where $option_sql", $binds, $config_key);
+    $row = db_query_value($value, "select `$value` from `$table` where $where $option_sql", $binds, $config_key);
 
-  return $row[$value];
+    return $row[$value];
 }/*}}}*/
