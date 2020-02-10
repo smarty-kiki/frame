@@ -32,7 +32,10 @@ abstract class entity implements JsonSerializable, Serializable
     private $relationships = [];
     private $relationship_refs = [];
 
-    abstract public static function struct_formaters($property);
+    public static function struct_formaters($property)
+    {
+
+    }
 
     protected static function init()
     {
