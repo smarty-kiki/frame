@@ -191,6 +191,42 @@ function cache_hmget($key, array $fields, $config_key = 'default')
     });
 }/*}}}*/
 
+function cache_lpush($key, $values, $expires = 0, $config_key = 'default')
+{/*{{{*/
+    $values = (array) $values;
+
+    return _redis_cache_closure($config_key, function ($redis) use ($key, $values, $expires) {
+
+        $res = $redis->lpush($key, ...$values);
+
+        if ($expires) {
+            $redis->setTimeout($key, $expires);
+        }
+
+        return $res;
+    });
+}/*}}}*/
+
+function cache_blpop($keys, $expires = 0, $config_key = 'default')
+{/*{{{*/
+    $is_array = is_array($keys);
+
+    $params = (array) $keys;
+
+    $params[] = $expires;
+
+    $res = _redis_cache_closure($config_key, function ($redis) use ($params) {
+
+        return $redis->blpop(...$params);
+    });
+
+    if ($res) {
+        return $is_array? [$res[0] => $res[1]] : $res[1];
+    } else {
+        return $is_array? []: null;
+    }
+}/*}}}*/
+
 function cache_close()
 {/*{{{*/
     return _redis_connection([]);
