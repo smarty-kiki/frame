@@ -207,13 +207,13 @@ function cache_lpush($key, $values, $expires = 0, $config_key = 'default')
     });
 }/*}}}*/
 
-function cache_blpop($keys, $expires = 0, $config_key = 'default')
+function cache_blpop($keys, $wait_time = 0, $config_key = 'default')
 {/*{{{*/
     $is_array = is_array($keys);
 
     $params = (array) $keys;
 
-    $params[] = $expires;
+    $params[] = $wait_time;
 
     $res = _redis_cache_closure($config_key, function ($redis) use ($params) {
 

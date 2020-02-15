@@ -149,7 +149,7 @@ function cache_lpush($key, $values, $expires = 0, $config_key = 'default')
     throw new exception('function '.__FUNCTION__.' not implement in memcache');
 }/*}}}*/
 
-function cache_blpop($keys, $expires = 0, $config_key = 'default')
+function cache_blpop($keys, $wait_time = 0, $config_key = 'default')
 {/*{{{*/
     throw new exception('function '.__FUNCTION__.' not implement in memcache');
 }/*}}}*/
