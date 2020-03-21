@@ -549,6 +549,7 @@ function remote_post($url, $data = [], $timeout = 3, $retry = 3, array $headers 
         CURLOPT_URL => $url,
         CURLOPT_POST => 1,
         CURLOPT_TIMEOUT => $timeout,
+        CURLOPT_CONNECTTIMEOUT => $timeout,
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_POSTFIELDS => $data,
         CURLOPT_ENCODING => 'gzip',
@@ -604,6 +605,7 @@ function remote_get($url, $timeout = 3, $retry = 3, array $headers = [], array $
     curl_setopt_array($ch, [
         CURLOPT_URL => $url,
         CURLOPT_TIMEOUT => $timeout,
+        CURLOPT_CONNECTTIMEOUT => $timeout,
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_ENCODING => 'gzip',
         CURLOPT_USERAGENT => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.101 Safari/537.36',
