@@ -408,7 +408,5 @@ function db_simple_query_value($table, $value, array $wheres, $option_sql = '', 
 {/*{{{*/
     list($where, $binds) = db_simple_where_sql($wheres);
 
-    $row = db_query_value($value, "select `$value` from `$table` where $where $option_sql", $binds, $config_key);
-
-    return $row[$value];
+    return db_query_value($value, "select `$value` from `$table` where $where $option_sql", $binds, $config_key);
 }/*}}}*/
