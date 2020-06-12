@@ -776,6 +776,34 @@ class dao
         return $entities;
     }/*}}}*/
 
+    public function find_all_paginated_by_current_page_and_column($current_page, $page_size, array $columns = [])
+    {/*{{{*/
+        $res = [
+            'list' => [],
+            'pagination' => [
+                'page_size' => $page_size,
+                'current_page' => $current_page,
+                'count' => 0,
+                'pages' => 0,
+            ],
+        ];
+
+        list($condition, $binds) = db_simple_where_sql($columns);
+        $count = $this->count_by_condition($condition, $binds);
+        if (! $count) {
+            return $res;
+        } else {
+            $res['pagination']['count'] = $count;
+            $res['pagination']['pages'] = ceil($count / $page_size);
+        }
+
+        $offset = $page_size * ($current_page - 1);
+
+        $res['list'] = $this->find_all_by_condition($condition." limit $offset, $page_size", $binds);
+
+        return $res;
+    }/*}}}*/
+
     public function find_all_paginated_by_current_page_and_condition($current_page, $page_size, $condition, array $binds = [])
     {/*{{{*/
         $res = [
