@@ -58,7 +58,7 @@ function http_server()
 
         $container = $http = new Swoole\Http\Server($config['ip'], $config['port']);
 
-        $http->set($config['set']);
+        $http->set($config['http_server_options']);
 
         Swoole\Runtime::enableCoroutine();
 
