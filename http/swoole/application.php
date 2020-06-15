@@ -24,6 +24,30 @@ function _response($response = false)
     return $container;
 }/*}}}*/
 
+function swoole_channel(array $closures = [])
+{/*{{{*/
+    if (! $closures) {
+        return [];
+    }
+
+    $count = count($closures);
+
+    $chan = new chan($count);
+
+    foreach ($closures as $key => $closure) {
+        go(function () use ($chan, $key, $closure) {
+            $chan->push([ $key => call_user_func($closure) ]);
+        });
+    }
+
+    $res = [];
+    for ($i = 0; $i < $count; $i ++) {
+        $res = array_merge($res, $chan->pop());
+    }
+
+    return $res;
+}/*}}}*/
+
 function http_server()
 {/*{{{*/
     static $container = null;
@@ -35,6 +59,8 @@ function http_server()
         $container = $http = new Swoole\Http\Server($config['ip'], $config['port']);
 
         $http->set($config['set']);
+
+        Swoole\Runtime::enableCoroutine();
 
         $http->on('request', function ($request, $response) {
 
@@ -72,9 +98,9 @@ function http_server()
  * @return bool
  */
 function is_https()
-{
+{/*{{{*/
     //todo::kiki
-}
+}/*}}}*/
 
 /**
  * Get the current URI.
