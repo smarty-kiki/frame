@@ -411,7 +411,7 @@ function config_preload()
 
         foreach ($files as $file) {
 
-            if ($file{0} !== '.') {
+            if ($file[0] !== '.') {
 
                 if ((! is_dir($dir.'/'.$file)) && ! is_dir($env_dir.'/'.$file)) {
 
