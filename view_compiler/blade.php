@@ -6,6 +6,7 @@ class blade_stream
 {/*{{{*/
     private $string;
     private $position;
+    private $options = [];
 
     private static $streams = [];
 
@@ -49,6 +50,16 @@ class blade_stream
 
     public function stream_stat()
     {/*{{{*/
+    }/*}}}*/
+
+    public function stream_set_option($option, $arg1, $arg2)
+    {/*{{{*/
+        $this->options[$option] = [
+            'arg1' => $arg1,
+            'arg2' => $arg2,
+        ];
+
+        return true;
     }/*}}}*/
 }/*}}}*/
 
