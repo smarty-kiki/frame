@@ -15,7 +15,7 @@ function _command_prepare_arguments()
 
             switch (true) {
 
-            case preg_match('/^-([a-zA-Z]+)$/', $argument, $res):
+            case preg_match('/^-([a-zA-Z_]+)$/', $argument, $res):
                 $arguments[$res[1]] = true;
                 break;
 
@@ -35,7 +35,7 @@ function command_paramater($key, $default = null)
 
     if (! isset($arguments[$key])) {
         if (is_null($default)) {
-            echo "需要加 --$key=xxx 或者 -$key\n";
+            echo "\033[31m需要加 --$key=xxx 或者 -$key\033[0m\n";
             exit(1);
         } else {
             return $default;

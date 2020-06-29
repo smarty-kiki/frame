@@ -120,7 +120,7 @@ function cache_delete($key, $config_key = 'default')
 {/*{{{*/
     return _redis_cache_closure($config_key, function ($redis) use ($key) {
 
-        return $redis->delete($key);
+        return $redis->del($key);
     });
 }/*}}}*/
 
@@ -128,7 +128,7 @@ function cache_multi_delete(array $keys, $config_key = 'default')
 {/*{{{*/
     return _redis_cache_closure($config_key, function ($redis) use ($keys) {
 
-        return $redis->delete($keys);
+        return $redis->del($keys);
     });
 }/*}}}*/
 
@@ -139,7 +139,7 @@ function cache_increment($key, $number = 1, $expires = 0, $config_key = 'default
         $res = $redis->incr($key, $number);
 
         if ($expires) {
-            $redis->setTimeout($key, $expires);
+            $redis->expire($key, $expires);
         }
 
         return $res;
@@ -153,7 +153,7 @@ function cache_decrement($key, $number = 1, $expires = 0, $config_key = 'default
         $res = $redis->decr($key, $number);
 
         if ($expires) {
-            $redis->setTimeout($key, $expires);
+            $redis->expire($key, $expires);
         }
 
         return $res;
@@ -175,7 +175,7 @@ function cache_hmset($key, array $array, $expires = 0, $config_key = 'default')
         $res = $redis->hmset($key, $array);
 
         if ($expires) {
-            $redis->setTimeout($key, $expires);
+            $redis->expire($key, $expires);
         }
 
         return $res;
@@ -200,7 +200,7 @@ function cache_lpush($key, $values, $expires = 0, $config_key = 'default')
         $res = $redis->lpush($key, ...$values);
 
         if ($expires) {
-            $redis->setTimeout($key, $expires);
+            $redis->expire($key, $expires);
         }
 
         return $res;
