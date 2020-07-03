@@ -217,7 +217,7 @@ abstract class entity implements JsonSerializable, Serializable
                             if (isset($formater['reg'])) {
                                 otherwise(preg_match($formater['reg'], $value), $formater['failed_message']);
                             } elseif (isset($formater['function'])) {
-                                otherwise(call_user_func($formater['function'], $value), $formater['failed_message']);
+                                otherwise(call_user_func($formater['function'], $value), static::$struct_display_names[$property].$formater['failed_message']);
                             }
                         }
                     }
