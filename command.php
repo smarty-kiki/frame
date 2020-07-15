@@ -81,6 +81,63 @@ function command_not_found($rule = null, $description = null)
     }
 }/*}}}*/
 
+function command_read_completions(closure $closure = null)
+{/*{{{*/
+    static $container = null;
+
+    if (! is_null($closure)) {
+
+        $container = $closure;
+    }
+
+    return $container;
+}/*}}}*/
+
+function _command_readline($prompt)
+{/*{{{*/
+    readline_completion_function(function ($block_buffer, $block_start, $point) {
+
+        $buffer_info = readline_info();
+        $buffer_info['block_buffer'] = $block_buffer;
+        $buffer_info['block_start'] = $block_start;
+
+        $closure = command_read_completions();
+
+        if (is_null($closure)) {
+
+            return [];
+        }
+
+        $result = call_user_func($closure, $buffer_info);
+
+        return array_filter($result, function ($val) use ($block_buffer) {
+            return starts_with($val, $block_buffer);
+        });
+    });
+
+    $prompting = true;
+    $result = '';
+
+    readline_callback_handler_install($prompt, function ($line) use (&$prompting, &$result) {
+        readline_add_history($line);
+        $result = $line;
+        $prompting = false;
+        readline_callback_handler_remove();
+    });
+
+    while ($prompting) {
+        $w = NULL;
+        $e = NULL;
+        $r = [STDIN];
+        $n = stream_select($r, $w, $e, null);
+        if ($n && in_array(STDIN, $r)) {
+            readline_callback_read_char();
+        }
+    }
+
+    return $result;
+}/*}}}*/
+
 function command_read($prompt, $default = true, array $options = [])
 {/*{{{*/
     if ($options) {
@@ -92,16 +149,16 @@ function command_read($prompt, $default = true, array $options = [])
         $prompt .= "\n> ";
 
         do {
-            fwrite(STDOUT, $prompt);  
-            $result = trim(fgets(STDIN));  
+            $result = _command_readline($prompt);
+            $result = trim($result);
             $result = ($result === '')? $default: $result;
         } while (! array_key_exists($result, $options));
 
         return $options[$result];
     } else {
         $prompt = "$prompt (Default: $default)\n> ";
-        fwrite(STDOUT, $prompt);  
-        $result = trim(fgets(STDIN));  
+        $result = _command_readline($prompt);
+        $result = trim($result);
         return ($result === '')? $default: $result;
     }
 }/*}}}*/
