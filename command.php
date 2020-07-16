@@ -110,6 +110,10 @@ function _command_readline($prompt)
 
         $result = call_user_func($closure, $buffer_info);
 
+        if ($block_buffer === '') {
+            return $result;
+        }
+
         return array_filter($result, function ($val) use ($block_buffer) {
             return starts_with($val, $block_buffer);
         });
