@@ -697,7 +697,7 @@ class dao
         return $this->find_all_by_sql('select * from `'.$this->table_name.'` '.$with_deleted_sql.' order by id', []);
     }/*}}}*/
 
-    public function find_all_by_column(array $columns = [])
+    public function find_all_by_column(array $columns)
     {/*{{{*/
         if ($columns) {
 
@@ -776,7 +776,7 @@ class dao
         return $entities;
     }/*}}}*/
 
-    public function find_all_paginated_by_current_page_and_column($current_page, $page_size, array $columns = [])
+    public function find_all_paginated_by_current_page_and_column($current_page, $page_size, array $columns)
     {/*{{{*/
         $res = [
             'list' => [],

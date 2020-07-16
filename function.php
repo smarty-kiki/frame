@@ -285,6 +285,13 @@ function str_finish($value, $cap)
     return preg_replace('/(?:'.$quoted.')+$/', '', $value).$cap;
 }/*}}}*/
 
+function str_begin($value, $cap)
+{/*{{{*/
+    $quoted = preg_quote($cap, '/');
+
+    return $cap.preg_replace('/^(?:'.$quoted.')+/', '', $value);
+}/*}}}*/
+
 function is_url($path)
 {/*{{{*/
     if (starts_with($path, array('#', '//', 'mailto:', 'tel:'))) {
