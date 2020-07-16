@@ -118,7 +118,15 @@ function _command_readline($prompt)
     $prompting = true;
     $result = '';
 
-    readline_callback_handler_install($prompt, function ($line) use (&$prompting, &$result) {
+    $prompt_infos = explode("\n", $prompt);
+    $last_prompt_line = array_pop($prompt_infos);
+
+    if (! empty($prompt_infos)) {
+
+        echo implode("\n", $prompt_infos)."\n";
+    }
+
+    readline_callback_handler_install($last_prompt_line, function ($line) use (&$prompting, &$result) {
         readline_add_history($line);
         $result = $line;
         $prompting = false;
