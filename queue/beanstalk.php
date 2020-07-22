@@ -126,7 +126,7 @@ function _beanstalk_reserve($fp, $timeout = null)
     }
 }/*}}}*/
 
-function _beanstalk_delete($fp, $id, $maybe_not_found = false)
+function _beanstalk_delete($fp, $id)
 {/*{{{*/
     _beanstalk_connection_write($fp, sprintf('delete %d', $id));
     $status = _beanstalk_connection_read($fp);
@@ -135,12 +135,6 @@ function _beanstalk_delete($fp, $id, $maybe_not_found = false)
         case 'DELETED':
             return true;
         case 'NOT_FOUND':
-            if ($maybe_not_found) {
-                return true;
-            } else {
-                _beanstalk_error($status);
-                return false;
-            }
         default:
             _beanstalk_error($status);
             return false;
@@ -163,7 +157,7 @@ function _beanstalk_release($fp, $id, $priority, $delay)
     }
 }/*}}}*/
 
-function _beanstalk_bury($fp, $id, $maybe_not_found = false, $priority = 10)
+function _beanstalk_bury($fp, $id, $priority = 10)
 {/*{{{*/
     _beanstalk_connection_write($fp, sprintf('bury %d %d', $id, $priority));
     $status = _beanstalk_connection_read($fp);
@@ -172,12 +166,6 @@ function _beanstalk_bury($fp, $id, $maybe_not_found = false, $priority = 10)
         case 'BURIED':
             return true;
         case 'NOT_FOUND':
-            if ($maybe_not_found) {
-                return true;
-            } else {
-                _beanstalk_error($status);
-                return false;
-            }
         default:
             _beanstalk_error($status);
             return false;
@@ -355,6 +343,28 @@ function _beanstalk_list_tube_watched($fp)
     return _beanstalk_stats_read($fp);
 }/*}}}*/
 
+function _queue_last_reserved_job_id($id = null)
+{/*{{{*/
+    static $container = null;
+
+    if (! is_null($id)) {
+        return $container = $id;
+    }
+
+    return $container;
+}/*}}}*/
+
+function _queue_last_watched_config_key($config_key = null)
+{/*{{{*/
+    static $container = null;
+
+    if (! is_null($config_key)) {
+        return $container = $config_key;
+    }
+
+    return $container;
+}/*}}}*/
+
 function queue_finish_action(closure $action = null)
 {/*{{{*/
     static $container = null;
@@ -409,7 +419,7 @@ function queue_push($job_name, array $data = [], $delay = 0)
 
     $id = _beanstalk_put(
         $fp,
-        $job['priority'], 
+        $job['priority'],
         $delay,
         $run_time = 60,
         serialize([
@@ -437,6 +447,7 @@ function queue_watch($tube = 'default', $config_key = 'default', $memory_limit =
         $received_signal = true;
     });
 
+    _queue_last_watched_config_key($config_key);
     $finished_action = queue_finish_action();
 
     $fp = _beanstalk_connection($config_key);
@@ -466,6 +477,7 @@ function queue_watch($tube = 'default', $config_key = 'default', $memory_limit =
         $retry = $body['retry'];
 
         $job = queue_job_pickup($job_name);
+        _queue_last_reserved_job_id($id);
 
         try {
 
@@ -478,14 +490,14 @@ function queue_watch($tube = 'default', $config_key = 'default', $memory_limit =
         }
 
         if ($res) {
-            _beanstalk_delete($fp, $id, true);
+            _beanstalk_delete($fp, $id);
         } else {
             if (isset($job['retry'][$retry])) {
                 $retry_delay = $job['retry'][$retry];
 
                 $new_id = _beanstalk_put(
                     $fp,
-                    $job['priority'], 
+                    $job['priority'],
                     $retry_delay,
                     $run_time = 60,
                     serialize([
@@ -495,9 +507,9 @@ function queue_watch($tube = 'default', $config_key = 'default', $memory_limit =
                     ])
                 );
 
-                _beanstalk_delete($fp, $id, true);
+                _beanstalk_delete($fp, $id);
             } else {
-                _beanstalk_bury($fp, $id, true);
+                _beanstalk_bury($fp, $id);
             }
         }
 
@@ -512,4 +524,21 @@ function queue_status($tube = 'default', $config_key = 'default')
     $fp = _beanstalk_connection($config_key);
 
     return _beanstalk_stats_tube($fp, $tube);
+}/*}}}*/
+
+function queue_job_touch()
+{/*{{{*/
+    $config_key = _queue_last_watched_config_key();
+
+    if ($config_key) {
+
+        $fp = _beanstalk_connection($config_key);
+
+        $job_id = _queue_last_reserved_job_id();
+
+        if ($job_id) {
+
+            return _beanstalk_touch($fp, $job_id);
+        }
+    }
 }/*}}}*/
