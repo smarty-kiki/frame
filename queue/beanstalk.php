@@ -63,14 +63,14 @@ function _beanstalk_put($fp, $priority, $delay, $run_time, $data)
     $status = strtok(_beanstalk_connection_read($fp), ' ');
 
     switch ($status) {
-    case 'INSERTED':
-    case 'BURIED':
-        return (integer) strtok(' '); // job id
-    case 'EXPECTED_CRLF':
-    case 'JOB_TOO_BIG':
-    default:
-    _beanstalk_error($status);
-    return false;
+        case 'INSERTED':
+        case 'BURIED':
+            return (integer) strtok(' '); // job id
+        case 'EXPECTED_CRLF':
+        case 'JOB_TOO_BIG':
+        default:
+            _beanstalk_error($status);
+            return false;
     }
 }/*}}}*/
 
@@ -80,11 +80,11 @@ function _beanstalk_use_tube($fp, $tube)
     $status = strtok(_beanstalk_connection_read($fp), ' ');
 
     switch ($status) {
-    case 'USING':
-        return strtok(' ');
-    default:
-        _beanstalk_error($status);
-        return false;
+        case 'USING':
+            return strtok(' ');
+        default:
+            _beanstalk_error($status);
+            return false;
     }
 }/*}}}*/
 
@@ -94,12 +94,12 @@ function _beanstalk_pause_tube($fp, $tube, $delay)
     $status = strtok(_beanstalk_connection_read($fp), ' ');
 
     switch ($status) {
-    case 'PAUSED':
-        return true;
-    case 'NOT_FOUND':
-    default:
-        _beanstalk_error($status);
-        return false;
+        case 'PAUSED':
+            return true;
+        case 'NOT_FOUND':
+        default:
+            _beanstalk_error($status);
+            return false;
     }
 }/*}}}*/
 
@@ -113,31 +113,37 @@ function _beanstalk_reserve($fp, $timeout = null)
     $status = strtok(_beanstalk_connection_read($fp), ' ');
 
     switch ($status) {
-    case 'RESERVED':
-        return [
-            'id' => (integer) strtok(' '),
-            'body' => _beanstalk_connection_read($fp, (integer) strtok(' ')),
-        ];
-    case 'DEADLINE_SOON':
-    case 'TIMED_OUT':
-    default:
-    _beanstalk_error($status);
-    return false;
+        case 'RESERVED':
+            return [
+                'id' => (integer) strtok(' '),
+                'body' => _beanstalk_connection_read($fp, (integer) strtok(' ')),
+            ];
+        case 'DEADLINE_SOON':
+        case 'TIMED_OUT':
+        default:
+            _beanstalk_error($status);
+            return false;
     }
 }/*}}}*/
 
-function _beanstalk_delete($fp, $id)
+function _beanstalk_delete($fp, $id, $maybe_not_found = false)
 {/*{{{*/
     _beanstalk_connection_write($fp, sprintf('delete %d', $id));
     $status = _beanstalk_connection_read($fp);
 
     switch ($status) {
-    case 'DELETED':
-        return true;
-    case 'NOT_FOUND':
-    default:
-    _beanstalk_error($status);
-    return false;
+        case 'DELETED':
+            return true;
+        case 'NOT_FOUND':
+            if ($maybe_not_found) {
+                return true;
+            } else {
+                _beanstalk_error($status);
+                return false;
+            }
+        default:
+            _beanstalk_error($status);
+            return false;
     }
 }/*}}}*/
 
@@ -147,28 +153,34 @@ function _beanstalk_release($fp, $id, $priority, $delay)
     $status = _beanstalk_connection_read($fp);
 
     switch ($status) {
-    case 'RELEASED':
-    case 'BURIED':
-        return true;
-    case 'NOT_FOUND':
-    default:
-    _beanstalk_error($status);
-    return false;
+        case 'RELEASED':
+        case 'BURIED':
+            return true;
+        case 'NOT_FOUND':
+        default:
+            _beanstalk_error($status);
+            return false;
     }
 }/*}}}*/
 
-function _beanstalk_bury($fp, $id, $priority = 10)
+function _beanstalk_bury($fp, $id, $maybe_not_found = false, $priority = 10)
 {/*{{{*/
     _beanstalk_connection_write($fp, sprintf('bury %d %d', $id, $priority));
     $status = _beanstalk_connection_read($fp);
 
     switch ($status) {
-    case 'BURIED':
-        return true;
-    case 'NOT_FOUND':
-    default:
-    _beanstalk_error($status);
-    return false;
+        case 'BURIED':
+            return true;
+        case 'NOT_FOUND':
+            if ($maybe_not_found) {
+                return true;
+            } else {
+                _beanstalk_error($status);
+                return false;
+            }
+        default:
+            _beanstalk_error($status);
+            return false;
     }
 }/*}}}*/
 
@@ -178,12 +190,12 @@ function _beanstalk_touch($fp, $id)
     $status = _beanstalk_connection_read($fp);
 
     switch ($status) {
-    case 'TOUCHED':
-        return true;
-    case 'NOT_TOUCHED':
-    default:
-    _beanstalk_error($status);
-    return false;
+        case 'TOUCHED':
+            return true;
+        case 'NOT_TOUCHED':
+        default:
+            _beanstalk_error($status);
+            return false;
     }
 }/*}}}*/
 
@@ -193,11 +205,11 @@ function _beanstalk_watch($fp, $tube)
     $status = strtok(_beanstalk_connection_read($fp), ' ');
 
     switch ($status) {
-    case 'WATCHING':
-        return (integer) strtok(' ');
-    default:
-        _beanstalk_error($status);
-        return false;
+        case 'WATCHING':
+            return (integer) strtok(' ');
+        default:
+            _beanstalk_error($status);
+            return false;
     }
 }/*}}}*/
 
@@ -207,12 +219,12 @@ function _beanstalk_ignore($fp, $tube)
     $status = strtok(_beanstalk_connection_read($fp), ' ');
 
     switch ($status) {
-    case 'WATCHING':
-        return (integer) strtok(' ');
-    case 'NOT_IGNORED':
-    default:
-    _beanstalk_error($status);
-    return false;
+        case 'WATCHING':
+            return (integer) strtok(' ');
+        case 'NOT_IGNORED':
+        default:
+            _beanstalk_error($status);
+            return false;
     }
 }/*}}}*/
 
@@ -221,15 +233,15 @@ function _beanstalk_peek_read($fp)
     $status = strtok(_beanstalk_connection_read($fp), ' ');
 
     switch ($status) {
-    case 'FOUND':
-        return [
-            'id' => (integer) strtok(' '),
-            'body' => _beanstalk_connection_read($fp, (integer) strtok(' ')),
-        ];
-    case 'NOT_FOUND':
-    default:
-    _beanstalk_error($status);
-    return false;
+        case 'FOUND':
+            return [
+                'id' => (integer) strtok(' '),
+                'body' => _beanstalk_connection_read($fp, (integer) strtok(' ')),
+            ];
+        case 'NOT_FOUND':
+        default:
+            _beanstalk_error($status);
+            return false;
     }
 }/*}}}*/
 
@@ -263,11 +275,11 @@ function _beanstalk_kick($fp, $bound)
     $status = strtok(_beanstalk_connection_read($fp), ' ');
 
     switch ($status) {
-    case 'KICKED':
-        return (integer) strtok(' ');
-    default:
-        _beanstalk_error($status);
-        return false;
+        case 'KICKED':
+            return (integer) strtok(' ');
+        default:
+            _beanstalk_error($status);
+            return false;
     }
 }/*}}}*/
 
@@ -277,12 +289,12 @@ function _beanstalk_kick_job($fp, $id)
     $status = strtok(_beanstalk_connection_read($fp), ' ');
 
     switch ($status) {
-    case 'KICKED':
-        return true;
-    case 'NOT_FOUND':
-    default:
-    _beanstalk_error($status);
-    return false;
+        case 'KICKED':
+            return true;
+        case 'NOT_FOUND':
+        default:
+            _beanstalk_error($status);
+            return false;
     }
 }/*}}}*/
 
@@ -291,11 +303,11 @@ function _beanstalk_stats_read($fp)
     $status = strtok(_beanstalk_connection_read($fp), ' ');
 
     switch ($status) {
-    case 'OK':
-        return _beanstalk_connection_read($fp, (integer) strtok(' '));
-    default:
-        _beanstalk_error($status);
-        return false;
+        case 'OK':
+            return _beanstalk_connection_read($fp, (integer) strtok(' '));
+        default:
+            _beanstalk_error($status);
+            return false;
     }
 }/*}}}*/
 
@@ -329,11 +341,11 @@ function _beanstalk_list_tube_used($fp)
     $status = strtok(_beanstalk_connection_read($fp), ' ');
 
     switch ($status) {
-    case 'USING':
-        return strtok(' ');
-    default:
-        _beanstalk_error($status);
-        return false;
+        case 'USING':
+            return strtok(' ');
+        default:
+            _beanstalk_error($status);
+            return false;
     }
 }/*}}}*/
 
@@ -466,7 +478,7 @@ function queue_watch($tube = 'default', $config_key = 'default', $memory_limit =
         }
 
         if ($res) {
-            _beanstalk_delete($fp, $id);
+            _beanstalk_delete($fp, $id, true);
         } else {
             if (isset($job['retry'][$retry])) {
                 $retry_delay = $job['retry'][$retry];
@@ -483,9 +495,9 @@ function queue_watch($tube = 'default', $config_key = 'default', $memory_limit =
                     ])
                 );
 
-                _beanstalk_delete($fp, $id);
+                _beanstalk_delete($fp, $id, true);
             } else {
-                _beanstalk_bury($fp, $id);
+                _beanstalk_bury($fp, $id, true);
             }
         }
 
