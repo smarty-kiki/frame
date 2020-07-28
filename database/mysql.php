@@ -250,14 +250,17 @@ function db_simple_where_sql(array $wheres)
 
     $where_sqls = $binds = [];
 
+    $n = 0;
+
     foreach ($wheres as $column => $value) {
         if (is_array($value)) {
             $column_info = explode(' ', $column);
             $column = $column_info[0];
+            $bind_key = ':w'.$n.$column;
             $symbol = (isset($column_info[1]) && $column_info[1] === 'not')? 'not in': 'in';
 
-            $where_sqls[] = "`$column` $symbol :w_$column";
-            $binds[":w_$column"] = $value;
+            $where_sqls[] = "`$column` $symbol $bind_key";
+            $binds[$bind_key] = $value;
         } elseif (is_null($value)) {
             $column_info = explode(' ', $column);
             $column = $column_info[0];
@@ -267,11 +270,14 @@ function db_simple_where_sql(array $wheres)
         } else {
             $column_info = explode(' ', $column);
             $column = $column_info[0];
+            $bind_key = ':w'.$n.$column;
             $symbol = $column_info[1] ?? '=';
 
-            $where_sqls[] = "`$column` $symbol :w_$column";
-            $binds[":w_$column"] = $value;
+            $where_sqls[] = "`$column` $symbol $bind_key";
+            $binds[$bind_key] = $value;
         }
+
+        $n ++;
     }
 
     return [implode(' and ', $where_sqls), $binds];
