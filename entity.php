@@ -845,7 +845,12 @@ class dao
 
     protected function count_by_condition($condition, array $binds = [])
     {/*{{{*/
-        $sql = 'select count(*) as count from `'.$this->table_name.'` where '.$condition;
+        $with_deleted_sql = 'where';
+        if (! $this->with_deleted) {
+            $with_deleted_sql = 'where delete_time is null and';
+        }
+
+        $sql = 'select count(*) as count from `'.$this->table_name.'` '.$with_deleted_sql.' '.$condition;
 
         return db_query_value('count', $sql, $binds, $this->db_config_key);
     }/*}}}*/
