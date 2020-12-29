@@ -810,44 +810,36 @@ function english_word_singularize($word)
     return $word;
 }/*}}}*/
 
-function english_word_titleize($word, $uppercase = '')
+function english_word_titleize($word, bool $only_first = true)
 {/*{{{*/
-    $uppercase = $uppercase == 'first' ? 'ucfirst' : 'ucwords';
-    return $uppercase(english_word_humanize(english_word_underscore($word)));
+    $func = $only_first ? 'ucfirst' : 'ucwords';
+    return $func(english_word_humanize(english_word_underscore($word)));
 }/*}}}*/
 
 function english_word_camelize($word)
 {/*{{{*/
-    return str_replace(' ','',ucwords(preg_replace('/[^A-Z^a-z^0-9]+/',' ',$word)));
+    return str_replace([' ', '_'],'',ucwords(preg_replace('/[^A-Z^a-z^0-9]+/',' ',$word)));
 }/*}}}*/
 
 function english_word_underscore($word)
 {/*{{{*/
     return  strtolower(preg_replace('/[^A-Z^a-z^0-9]+/','_',
-        preg_replace('/([a-zd])([A-Z])/','1_2',
-        preg_replace('/([A-Z]+)([A-Z][a-z])/','1_2',$word))));
+        preg_replace('/([a-zd])([A-Z])/','\1_\2',
+        preg_replace('/([A-Z]+)([A-Z][a-z])/','\1_\2',$word))));
 }/*}}}*/
 
-function english_word_humanize($word, $uppercase = '')
+function english_word_humanize($word, bool $only_first = true)
 {/*{{{*/
-    $uppercase = $uppercase == 'all' ? 'ucwords' : 'ucfirst';
-    return $uppercase(str_replace('_',' ',preg_replace('/_id$/', '',$word)));
+    $func = $only_first ? 'ucfirst' : 'ucwords';
+
+    return $func(str_replace('_', ' ', english_word_underscore($word)));
 }/*}}}*/
 
 function english_word_variablize($word)
 {/*{{{*/
     $word = english_word_camelize($word);
+
     return strtolower($word[0]).substr($word,1);
-}/*}}}*/
-
-function english_word_tableize($class_name)
-{/*{{{*/
-    return english_word_pluralize(english_word_underscore($class_name));
-}/*}}}*/
-
-function english_word_classify($table_name)
-{/*{{{*/
-    return english_word_camelize(english_word_singularize($table_name));
 }/*}}}*/
 
 function english_word_ordinalize($number)
