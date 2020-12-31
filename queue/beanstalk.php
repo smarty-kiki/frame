@@ -441,6 +441,8 @@ function queue_pause($tube = 'default', $config_key = 'default', $delay = 3600)
 
 function queue_watch($tube = 'default', $config_key = 'default', $memory_limit = 1048576)
 {/*{{{*/
+    $out_of_run_time_deleted_job_ids = [];
+
     declare(ticks=1);
     $received_signal = false;
     pcntl_signal(SIGTERM, function () use (&$received_signal) {
@@ -481,8 +483,11 @@ function queue_watch($tube = 'default', $config_key = 'default', $memory_limit =
 
         try {
 
-            $res = false;
-            $res = call_user_func_array($job['closure'], [$data, $retry, $id]);
+            $res = isset($out_of_run_time_deleted_job_ids[$id]);
+
+            if (! $res) {
+                $res = call_user_func_array($job['closure'], [$data, $retry, $id]);
+            }
 
         } catch (exception $exception) {
 
@@ -490,7 +495,14 @@ function queue_watch($tube = 'default', $config_key = 'default', $memory_limit =
         }
 
         if ($res) {
-            _beanstalk_delete($fp, $id);
+            try {
+                _beanstalk_delete($fp, $id);
+            } catch (exception $exception) {
+                if ($exception->getMessage() === 'NOT_FOUND') {
+                    $out_of_run_time_deleted_job_ids[$id] = true;
+                }
+                log_exception($exception);
+            }
         } else {
             if (isset($job['retry'][$retry])) {
                 $retry_delay = $job['retry'][$retry];
