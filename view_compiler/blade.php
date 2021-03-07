@@ -201,11 +201,14 @@ function blade_eval($template, $args = [])
 
     ob_start();
 
-    include(blade_stream::generate_stream_path($path));
-
-    $echo = ob_get_contents();
-
-    ob_end_clean();
+    try {
+        include(blade_stream::generate_stream_path($path));
+    } catch (exception $ex) {
+        throw $ex;
+    } finally {
+        $echo = ob_get_contents();
+        ob_end_clean();
+    }
 
     return $echo;
 }/*}}}*/
