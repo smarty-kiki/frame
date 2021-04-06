@@ -2,6 +2,7 @@
 
 define('IDGENTER_CACHE_MIDWARE_KEY', 'idgenter');
 define('IDGENTER_CACHE_KEY_SUFFIX', '_last_id');
+define('UNITOFWORK_DEFAULT_ERROR_CODE', 'UNITOFWORK_DEFAULT_ERROR');
 
 function unit_of_work_db_config_key($config_key = null)
 {
@@ -18,7 +19,12 @@ function _unit_of_work_write($sql_template, array $binds = [], $config_key = 'de
 {
     $row_count = db_write($sql_template, $binds, $config_key);
 
-    otherwise($row_count === 1, 'data in unit of work is expired');
+    otherwise(
+        $row_count === 1,
+        'data in unit of work is expired',
+        'exception',
+        UNITOFWORK_DEFAULT_ERROR_CODE
+    );
 }
 
 function if_unit_of_work_executed($action = null)

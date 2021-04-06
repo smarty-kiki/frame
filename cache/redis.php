@@ -227,6 +227,56 @@ function cache_blpop($keys, $wait_time = 0, $config_key = 'default')
     }
 }/*}}}*/
 
+function cache_setbit($key, $offset, $value, $config_key = 'default')
+{/*{{{*/
+    return _redis_cache_closure($config_key, function ($redis) use ($key, $offset, $value) {
+
+        return $redis->setbit($key, $offset, $value);
+    });
+}/*}}}*/
+
+function cache_getbit($key, $offset, $config_key = 'default')
+{/*{{{*/
+    return _redis_cache_closure($config_key, function ($redis) use ($key, $offset) {
+
+        return $redis->getbit($key, $offset);
+    });
+}/*}}}*/
+
+function cache_bitcount($key, $start = 0, $end = -1, $config_key = 'default')
+{/*{{{*/
+    return _redis_cache_closure($config_key, function ($redis) use ($key, $start, $end) {
+
+        return $redis->bitcount($key, $start, $end);
+    });
+}/*}}}*/
+
+function cache_bitop($destkey, $operation, $keys, $config_key = 'default')
+{/*{{{*/
+    $keys = (array) $keys;
+
+    return _redis_cache_closure($config_key, function ($redis) use ($destkey, $operation, $keys) {
+
+        return $redis->bitop($operation, $destkey, ...$keys);
+    });
+}/*}}}*/
+
+function cache_bitpos($key, $bit, $start = 0, $end = -1, $config_key = 'default')
+{/*{{{*/
+    return _redis_cache_closure($config_key, function ($redis) use ($key, $bit, $start, $end) {
+
+        return $redis->bitpos($key, $bit, $start, $end);
+    });
+}/*}}}*/
+
+function cache_rename($old_key, $new_key, $config_key = 'default')
+{/*{{{*/
+    return _redis_cache_closure($config_key, function ($redis) use ($old_key, $new_key) {
+
+        return $redis->rename($old_key, $new_key);
+    });
+}/*}}}*/
+
 function cache_close()
 {/*{{{*/
     return _redis_connection([]);

@@ -138,7 +138,7 @@ function db_query_value($value, $sql_template, array $binds = [], $config_key = 
 {/*{{{*/
     $row = db_query_first($sql_template, $binds, $config_key);
 
-    return $row[$value];
+    return $row[$value] ?? null;
 }/*}}}*/
 
 function db_update($sql_template, array $binds = [], $config_key = 'default')

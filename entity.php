@@ -1,6 +1,8 @@
 <?php
 
 define('ENTITY_RELATIONSHIP_DELETED_SUFFIX', '_with_deleted');
+define('ENTITY_STRUCT_FORMATER_ERROR_CODE', 'ENTITY_STRUCT_FORMATER_ERROR');
+define('ENTITY_DEFAULT_ERROR_CODE', 'ENTITY_DEFAULT_ERROR');
 
 abstract class entity implements JsonSerializable, Serializable
 {
@@ -206,15 +208,30 @@ abstract class entity implements JsonSerializable, Serializable
 
                     if (static::$struct_data_types[$property] === 'enum') {
 
-                        otherwise(isset($formaters[$value]), "$property 的值 $value 未在枚举范围中");
+                        otherwise(
+                            isset($formaters[$value]),
+                            "$property 的值 $value 未在枚举范围中",
+                            'business_exception',
+                            ENTITY_STRUCT_FORMATER_ERROR_CODE
+                        );
                     } else {
 
                         foreach ($formaters as $formater) {
 
                             if (isset($formater['reg'])) {
-                                otherwise(preg_match($formater['reg'], $value), $formater['failed_message']);
+                                otherwise(
+                                    preg_match($formater['reg'], $value),
+                                    $formater['failed_message'],
+                                    'business_exception',
+                                    ENTITY_STRUCT_FORMATER_ERROR_CODE
+                                );
                             } elseif (isset($formater['function'])) {
-                                otherwise(call_user_func($formater['function'], $value), static::$struct_display_names[$property].$formater['failed_message']);
+                                otherwise(
+                                    call_user_func($formater['function'], $value),
+                                    static::$struct_display_names[$property].$formater['failed_message'],
+                                    'business_exception',
+                                    ENTITY_STRUCT_FORMATER_ERROR_CODE
+                                );
                             }
                         }
                     }
@@ -227,7 +244,12 @@ abstract class entity implements JsonSerializable, Serializable
 
     final public function __unset($property)
     {
-        otherwise(isset($this->relationships[$property]), '只能 unset 实体的关联关系');
+        otherwise(
+            isset($this->relationships[$property]),
+            '只能 unset 实体的关联关系',
+            'exception',
+            ENTITY_DEFAULT_ERROR_CODE
+        );
 
         unset($this->relationships[$property]);
     }
@@ -287,7 +309,12 @@ abstract class entity implements JsonSerializable, Serializable
 
     public function relationship_batch_load($relationship_name, array $from_entities)
     {
-        otherwise(array_key_exists($relationship_name, $this->relationship_refs), 'entity ['.get_class($this).'] has not a relationship called ['.$relationship_name.']');
+        otherwise(
+            array_key_exists($relationship_name, $this->relationship_refs),
+            'entity ['.get_class($this).'] has not a relationship called ['.$relationship_name.']',
+            'exception',
+            ENTITY_DEFAULT_ERROR_CODE
+        );
 
         $relationship_ref = $this->relationship_refs[$relationship_name];
 
@@ -1056,12 +1083,22 @@ function input_entity($entity_name, $message = null, $name = null)
 
         $entity = dao($entity_name)->find($id);
 
-        otherwise($entity->is_not_null(), sprintf($message, $id));
+        otherwise(
+            $entity->is_not_null(),
+            sprintf($message, $id),
+            'business_exception',
+            ENTITY_STRUCT_FORMATER_ERROR_CODE
+        );
 
         return $entity;
     }
 
-    otherwise(false, sprintf($message, $id));
+    otherwise(
+        false,
+        sprintf($message, $id),
+        'business_exception',
+        ENTITY_STRUCT_FORMATER_ERROR_CODE
+    );
 }
 
 function relationship_batch_load($entities, $relationship_chain)

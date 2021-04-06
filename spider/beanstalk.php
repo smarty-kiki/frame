@@ -1,7 +1,7 @@
 <?php
 
 define('SPIDER_POOL_TUBE', 'spider_pool');
-
+define('SPIDER_DEFAULT_ERROR_CODE', 'SPIDER_DEFAULT_ERROR');
 /**
  * tool
  */
@@ -14,7 +14,8 @@ function spider_cron_string_parse($cron_string, $after_timestamp = null)
             trim($cron_string)
         ), 
         "Invalid cron string: ".$cron_string,
-        'InvalidArgumentException'
+        'exception',
+        SPIDER_DEFAULT_ERROR_CODE
     );
 
     if (is_null($after_timestamp)) {
@@ -23,7 +24,8 @@ function spider_cron_string_parse($cron_string, $after_timestamp = null)
         otherwise(
             $after_timestamp && !is_numeric($after_timestamp),
             "\$after_timestamp must be a valid unix timestamp ($after_timestamp given)",
-            'InvalidArgumentException'
+            'exception',
+            SPIDER_DEFAULT_ERROR_CODE
         );
     }
 
@@ -148,11 +150,16 @@ function _spider_job(
     string $config_key
 )
 {/*{{{*/
-    otherwise(array_key_exists($format, [
-        'json' => true,
-        'html' => true,
-        'xml' => true,
-    ]));
+    otherwise(
+        array_key_exists($format, [
+            'json' => true,
+            'html' => true,
+            'xml' => true,
+        ]),
+        'format should be supported',
+        'exception',
+        SPIDER_DEFAULT_ERROR_CODE
+    );
 
     return [
         'cron_string' => $cron_string,
@@ -173,7 +180,12 @@ function spider_job_get(string $job_name, string $cron_string, string $url, stri
 {/*{{{*/
     $jobs = spider_jobs();
 
-    otherwise(! array_key_exists($job_name, $jobs), "spider job [$job_name] already exists");
+    otherwise(
+        ! array_key_exists($job_name, $jobs),
+        "spider job [$job_name] already exists",
+        'exception',
+        SPIDER_DEFAULT_ERROR_CODE
+    );
 
     $jobs[$job_name] = _spider_job(
         $cron_string,
@@ -196,7 +208,12 @@ function spider_job_post(string $job_name, string $cron_string, string $url, $da
 {/*{{{*/
     $jobs = spider_jobs();
 
-    otherwise(! array_key_exists($job_name, $jobs), "spider job [$job_name] already exists");
+    otherwise(
+        ! array_key_exists($job_name, $jobs),
+        "spider job [$job_name] already exists",
+        'exception',
+        SPIDER_DEFAULT_ERROR_CODE
+    );
 
     $jobs[$job_name] = _spider_job(
         $cron_string,
