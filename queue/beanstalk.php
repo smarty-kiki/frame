@@ -305,10 +305,28 @@ function _beanstalk_stats($fp)
     return _beanstalk_stats_read($fp);
 }/*}}}*/
 
-function _beanstalk_stats_job($fp, $id)
+function _beanstalk_stats_job($fp, $id, $array_result = false)
 {/*{{{*/
     _beanstalk_connection_write($fp, sprintf('stats-job %d', $id));
-    return _beanstalk_stats_read($fp);
+
+    $res = _beanstalk_stats_read($fp);
+
+    if ($array_result) {
+
+        $tmp = strtok($res, "\n");
+
+        $res = [];
+
+        while ($tmp !== false) {
+            $key = $tmp = strtok(':');
+            $tmp = $value = strtok("\n");
+            if ($value !== false) {
+                $res[$key] = trim($value);
+            }
+        }
+    }
+
+    return $res;
 }/*}}}*/
 
 function _beanstalk_stats_tube($fp, $tube)
@@ -425,7 +443,6 @@ function queue_push($job_name, array $data = [], $delay = 0)
         serialize([
             'job_name' => $job_name,
             'data' => $data,
-            'retry' => 0
         ])
     );
 
@@ -476,7 +493,6 @@ function queue_watch($tube = 'default', $config_key = 'default', $memory_limit =
         $body = unserialize($job_instance['body']);
         $job_name = $body['job_name'];
         $data = $body['data'];
-        $retry = $body['retry'];
 
         $job = queue_job_pickup($job_name);
         _queue_last_reserved_job_id($id);
@@ -486,7 +502,7 @@ function queue_watch($tube = 'default', $config_key = 'default', $memory_limit =
             $res = isset($out_of_run_time_deleted_job_ids[$id]);
 
             if (! $res) {
-                $res = call_user_func_array($job['closure'], [$data, $retry, $id]);
+                $res = call_user_func_array($job['closure'], [$data, $id]);
             }
 
         } catch (exception $exception) {
@@ -504,22 +520,17 @@ function queue_watch($tube = 'default', $config_key = 'default', $memory_limit =
                 log_exception($exception);
             }
         } else {
+
+            $stats_info = _beanstalk_stats_job($fp, $id, true);
+
+            $retry = $stats_info['releases'];
+
             if (isset($job['retry'][$retry])) {
+
                 $retry_delay = $job['retry'][$retry];
 
-                $new_id = _beanstalk_put(
-                    $fp,
-                    $job['priority'],
-                    $retry_delay,
-                    $run_time = 60,
-                    serialize([
-                        'job_name' => $job_name,
-                        'data' => $data,
-                        'retry' => $retry + 1,
-                    ])
-                );
+                _beanstalk_release($fp, $id, $job['priority'], $retry_delay);
 
-                _beanstalk_delete($fp, $id);
             } else {
                 _beanstalk_bury($fp, $id);
             }
