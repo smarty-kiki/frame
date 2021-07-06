@@ -325,8 +325,9 @@ abstract class entity implements JsonSerializable, Serializable
 
 class null_entity extends entity
 {
-    public $id = 0;
     /*{{{*/
+    public $id = 0;
+
     private $mock_entity_name = null;
 
     public static function struct_validators($property) { }
@@ -1069,7 +1070,7 @@ function local_cache_flush_all()
  * @access public
  * @return void
  */
-function input_entity($entity_name, $message = null, $name = null)
+function input_entity($entity_name, $name = null, $require = false)
 {
     if (is_null($name)) {
         $name = $entity_name.'_id';
@@ -1083,22 +1084,15 @@ function input_entity($entity_name, $message = null, $name = null)
 
         $entity = dao($entity_name)->find($id);
 
-        otherwise(
-            $entity->is_not_null(),
-            sprintf($message, $id),
-            'business_exception',
-            ENTITY_STRUCT_VALIDATOR_ERROR_CODE
-        );
+        otherwise_error_code(strtoupper($entity_name).'_NOT_FOUND', $entity->is_not_null());
 
         return $entity;
     }
 
-    otherwise(
-        false,
-        sprintf($message, $id),
-        'business_exception',
-        ENTITY_STRUCT_VALIDATOR_ERROR_CODE
-    );
+    if ($require) {
+
+        otherwise_error_code(strtoupper($entity_name).'_NOT_FOUND', false);
+    }
 }
 
 function relationship_batch_load($entities, $relationship_chain)
