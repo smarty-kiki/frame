@@ -1,7 +1,7 @@
 <?php
 
 define('ENTITY_RELATIONSHIP_DELETED_SUFFIX', '_with_deleted');
-define('ENTITY_STRUCT_FORMATER_ERROR_CODE', 'ENTITY_STRUCT_FORMATER_ERROR');
+define('ENTITY_STRUCT_VALIDATOR_ERROR_CODE', 'ENTITY_STRUCT_VALIDATOR_ERROR');
 define('ENTITY_DEFAULT_ERROR_CODE', 'ENTITY_DEFAULT_ERROR');
 
 abstract class entity implements JsonSerializable, Serializable
@@ -31,7 +31,7 @@ abstract class entity implements JsonSerializable, Serializable
     private $relationships = [];
     private $relationship_refs = [];
 
-    public static function struct_formaters($property)
+    public static function struct_validators($property)
     {
 
     }
@@ -202,35 +202,35 @@ abstract class entity implements JsonSerializable, Serializable
 
         if (array_key_exists($property, $this->attributes)) {
 
-            if ($formaters = static::struct_formaters($property)) {
+            if ($validators = static::struct_validators($property)) {
 
                 if (static::$struct_is_required[$property] || $value !== '') {
 
                     if (static::$struct_data_types[$property] === 'enum') {
 
                         otherwise(
-                            isset($formaters[$value]),
+                            isset($validators[$value]),
                             "$property 的值 $value 未在枚举范围中",
                             'business_exception',
-                            ENTITY_STRUCT_FORMATER_ERROR_CODE
+                            ENTITY_STRUCT_VALIDATOR_ERROR_CODE
                         );
                     } else {
 
-                        foreach ($formaters as $formater) {
+                        foreach ($validators as $validator) {
 
-                            if (isset($formater['reg'])) {
+                            if (isset($validator['reg'])) {
                                 otherwise(
-                                    preg_match($formater['reg'], $value),
-                                    $formater['failed_message'],
+                                    preg_match($validator['reg'], $value),
+                                    $validator['failed_message'],
                                     'business_exception',
-                                    ENTITY_STRUCT_FORMATER_ERROR_CODE
+                                    ENTITY_STRUCT_VALIDATOR_ERROR_CODE
                                 );
-                            } elseif (isset($formater['function'])) {
+                            } elseif (isset($validator['function'])) {
                                 otherwise(
-                                    call_user_func($formater['function'], $value),
-                                    static::$struct_display_names[$property].$formater['failed_message'],
+                                    call_user_func($validator['function'], $value),
+                                    static::$struct_display_names[$property].$validator['failed_message'],
                                     'business_exception',
-                                    ENTITY_STRUCT_FORMATER_ERROR_CODE
+                                    ENTITY_STRUCT_VALIDATOR_ERROR_CODE
                                 );
                             }
                         }
@@ -329,7 +329,7 @@ class null_entity extends entity
     /*{{{*/
     private $mock_entity_name = null;
 
-    public static function struct_formaters($property) { }
+    public static function struct_validators($property) { }
 
     public static function create($mock_entity_name = null)
     {
@@ -1087,7 +1087,7 @@ function input_entity($entity_name, $message = null, $name = null)
             $entity->is_not_null(),
             sprintf($message, $id),
             'business_exception',
-            ENTITY_STRUCT_FORMATER_ERROR_CODE
+            ENTITY_STRUCT_VALIDATOR_ERROR_CODE
         );
 
         return $entity;
@@ -1097,7 +1097,7 @@ function input_entity($entity_name, $message = null, $name = null)
         false,
         sprintf($message, $id),
         'business_exception',
-        ENTITY_STRUCT_FORMATER_ERROR_CODE
+        ENTITY_STRUCT_VALIDATOR_ERROR_CODE
     );
 }
 
