@@ -1076,10 +1076,6 @@ function input_entity($entity_name, $name = null, $require = false)
         $name = $entity_name.'_id';
     }
 
-    if (! $message) {
-        $message = '无效的 '.$name;
-    }
-
     if ($id = input($name)) {
 
         $entity = dao($entity_name)->find($id);
