@@ -1088,6 +1088,8 @@ function input_entity($entity_name, $name = null, $require = false)
     if ($require) {
 
         otherwise_error_code(strtoupper($entity_name).'_NOT_FOUND', false);
+    } else {
+        return null_entity::create($entity_name);
     }
 }
 
