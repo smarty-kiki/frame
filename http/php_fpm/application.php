@@ -104,6 +104,17 @@ function flush_action(closure $action, $args = [], closure $verify = null)
     }
 }
 
+function matched_rule($rule = null)
+{
+    static $container = null;
+
+    if (!is_null($rule)) {
+        return $container = $rule;
+    }
+
+    return $container;
+}
+
 /**
  * Route for all method.
  *
@@ -116,6 +127,7 @@ function if_any($rule, closure $action)
 
     if ($matched) {
 
+        matched_rule($rule);
         flush_action($action, $args, if_verify());
         trigger_redirect();
         exit;
