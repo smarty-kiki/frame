@@ -254,6 +254,15 @@ abstract class entity implements JsonSerializable, Serializable
         unset($this->relationships[$property]);
     }
 
+    final public function __isset($property)
+    {
+        $method = "get_$property";
+
+        return isset($this->attributes[$property])
+            || isset($this->relationships[$property])
+            || method_exists($this, $method);
+    }
+
     private function load_relationship_from_ref($relationship_name)
     {
         $relationship_ref = $this->relationship_refs[$relationship_name];
