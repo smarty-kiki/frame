@@ -25,7 +25,7 @@ function _beanstalk_container(array $config)
             $fp = fsockopen($host, $port, $error_number, $error_str, $timeout);
 
             if ($fp === false) {
-                _beanstalk_error('ERROR: '.$errno.' - '.$errstr);
+                _beanstalk_error('ERROR: '.$error_number.' - '.$error_str);
             }
 
             stream_set_timeout($fp, $timeout);
