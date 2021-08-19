@@ -5,24 +5,47 @@ function _beanstalk_error($error)
     throw new Exception($error);
 }/*}}}*/
 
-function _beanstalk_connection($config_key)
+function _beanstalk_container(array $config)
 {/*{{{*/
     static $container = [];
 
+    if (empty($config)) {
+
+        return $container = [];
+    } else {
+
+        $host = $config['host'];
+        $port = $config['port'];
+        $timeout = $config['timeout'];
+
+        $identifier = $host . $port . $timeout;
+
+        if (!isset($container[$identifier])) {
+
+            $fp = fsockopen($host, $port, $error_number, $error_str, $timeout);
+
+            if ($fp === false) {
+                _beanstalk_error('ERROR: '.$error_number.' - '.$error_str);
+            }
+
+            stream_set_timeout($fp, $timeout);
+
+            $container[$identifier] = $fp;
+        }
+
+        return $container[$identifier];
+    }
+}/*}}}*/
+
+function _beanstalk_connection($config_key)
+{/*{{{*/
     $config = config_midware('beanstalk', $config_key);
 
-    $sign = $config['host'] . $config['port'] . $config['timeout'];
-
-    if (empty($container[$sign])) {
-
-        $fp = pfsockopen($config['host'], $config['port'], $error_number, $error_str, $config['timeout']);
-
-        stream_set_timeout($fp, -1);
-
-        $container[$sign] = $fp;
-    }
-
-    return $container[$sign];
+    return _beanstalk_container([
+        'host' => $config['host'],
+        'port' => $config['port'],
+        'timeout' => $config['timeout'],
+    ]);
 }/*}}}*/
 
 function _beanstalk_disconnect($fp)
@@ -30,6 +53,11 @@ function _beanstalk_disconnect($fp)
     _beanstalk_connection_write($fp, 'quit');
 
     return fclose($fp);
+}/*}}}*/
+
+function _beanstalk_close_all()
+{/*{{{*/
+    _beanstalk_container([]);
 }/*}}}*/
 
 function _beanstalk_connection_read($fp, $data_length = null)
@@ -118,8 +146,9 @@ function _beanstalk_reserve($fp, $timeout = null)
                 'id' => (integer) strtok(' '),
                 'body' => _beanstalk_connection_read($fp, (integer) strtok(' ')),
             ];
-        case 'DEADLINE_SOON':
         case 'TIMED_OUT':
+            return false;
+        case 'DEADLINE_SOON':
         default:
             _beanstalk_error($status);
             return false;
@@ -469,15 +498,6 @@ function queue_watch($tube = 'default', $config_key = 'default', $memory_limit =
     _queue_last_watched_config_key($config_key);
     $finished_action = queue_finish_action();
 
-    $fp = _beanstalk_connection($config_key);
-
-    _beanstalk_watch($fp, $tube);
-
-    if ($tube !== 'default') {
-
-        _beanstalk_ignore($fp, 'default');
-    }
-
     for (;;) {
 
         if (memory_get_usage(true) > $memory_limit) {
@@ -488,7 +508,21 @@ function queue_watch($tube = 'default', $config_key = 'default', $memory_limit =
             break;
         }
 
-        $job_instance = _beanstalk_reserve($fp);
+        _beanstalk_close_all();
+        $fp = _beanstalk_connection($config_key);
+
+        _beanstalk_watch($fp, $tube);
+
+        if ($tube !== 'default') {
+
+            _beanstalk_ignore($fp, 'default');
+        }
+
+        $job_instance = _beanstalk_reserve($fp, 5);
+        if ($job_instance === false) {
+            continue;
+        }
+
         $id = $job_instance['id'];
         $body = unserialize($job_instance['body']);
         $job_name = $body['job_name'];
