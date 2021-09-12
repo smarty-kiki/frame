@@ -11,6 +11,10 @@ function _beanstalk_container(array $config)
 
     if (empty($config)) {
 
+        foreach ($container as $fp) {
+            _beanstalk_disconnect($fp);
+        }
+
         return $container = [];
     } else {
 
@@ -18,7 +22,7 @@ function _beanstalk_container(array $config)
         $port = $config['port'];
         $timeout = $config['timeout'];
 
-        $identifier = $host . $port . $timeout;
+        $identifier = $host . $port;
 
         if (!isset($container[$identifier])) {
 
@@ -28,7 +32,7 @@ function _beanstalk_container(array $config)
                 _beanstalk_error('ERROR: '.$error_number.' - '.$error_str);
             }
 
-            stream_set_timeout($fp, $timeout);
+            stream_set_timeout($fp, -1);
 
             $container[$identifier] = $fp;
         }
@@ -55,7 +59,7 @@ function _beanstalk_disconnect($fp)
     return fclose($fp);
 }/*}}}*/
 
-function _beanstalk_close_all()
+function beanstalk_close()
 {/*{{{*/
     _beanstalk_container([]);
 }/*}}}*/
@@ -423,6 +427,15 @@ function queue_finish_action(closure $action = null)
     return $container;
 }/*}}}*/
 
+function queue_finish_action_trigger()
+{/*{{{*/
+    $finished_action = queue_finish_action();
+
+    if ($finished_action instanceof closure) {
+        call_user_func($finished_action);
+    }
+}/*}}}*/
+
 function queue_job_pickup($job_name)
 {/*{{{*/
     $jobs = queue_jobs();
@@ -496,7 +509,6 @@ function queue_watch($tube = 'default', $config_key = 'default', $memory_limit =
     });
 
     _queue_last_watched_config_key($config_key);
-    $finished_action = queue_finish_action();
 
     for (;;) {
 
@@ -508,7 +520,8 @@ function queue_watch($tube = 'default', $config_key = 'default', $memory_limit =
             break;
         }
 
-        _beanstalk_close_all();
+        queue_finish_action_trigger();
+
         $fp = _beanstalk_connection($config_key);
 
         _beanstalk_watch($fp, $tube);
@@ -518,7 +531,7 @@ function queue_watch($tube = 'default', $config_key = 'default', $memory_limit =
             _beanstalk_ignore($fp, 'default');
         }
 
-        $job_instance = _beanstalk_reserve($fp, 5);
+        $job_instance = _beanstalk_reserve($fp, $wait_second = 5);
         if ($job_instance === false) {
             continue;
         }
@@ -568,10 +581,6 @@ function queue_watch($tube = 'default', $config_key = 'default', $memory_limit =
             } else {
                 _beanstalk_bury($fp, $id);
             }
-        }
-
-        if ($finished_action instanceof closure) {
-            call_user_func($finished_action);
         }
     }
 }/*}}}*/
