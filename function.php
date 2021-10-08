@@ -668,112 +668,14 @@ function http($args)
     return $res;
 }/*}}}*/
 
-function remote_post($url, $data = [], $timeout = 3, $retry = 3, array $headers = [], array $cookies = [])
+function http_json($args)
 {/*{{{*/
-    $ch = curl_init();
-
-    curl_setopt_array($ch, [
-        CURLOPT_URL => $url,
-        CURLOPT_POST => 1,
-        CURLOPT_TIMEOUT => $timeout,
-        CURLOPT_CONNECTTIMEOUT => $timeout,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_POSTFIELDS => $data,
-        CURLOPT_ENCODING => 'gzip',
-        CURLOPT_USERAGENT => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.101 Safari/537.36',
-    ]);
-
-    if ($headers) {
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-    }
-
-    if ($cookies) {
-        curl_setopt($ch, CURLOPT_COOKIE, http_build_query($cookies, '', ';').';');
-    }
-
-    while ($retry-- > 0) {
-        $res = curl_exec($ch);
-        $errno = curl_errno($ch);
-
-        if (0 === $errno) {
-            break;
-        }
-    }
-
-    $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-
-    curl_close($ch);
-
-    if (404 === $code) {
-        return false;
-    }
-
-    return $res;
+    return json_decode(http($args), true);
 }/*}}}*/
 
-function remote_post_json($url, $data = [], $timeout = 3, $retry = 3, array $headers = [], array $cookies = [])
+function http_xml($args)
 {/*{{{*/
-    return json_decode(remote_post($url, $data, $timeout, $retry, $headers, $cookies), true);
-}/*}}}*/
-
-function remote_post_xml($url, $data = [], $timeout = 3, $retry = 3, array $headers = [], array $cookies = [])
-{/*{{{*/
-    $raw_res = remote_post($url, $data, $timeout, $retry, $headers, $cookies);
-
-    $raw_xml = simplexml_load_string($raw_res, 'SimpleXMLElement', LIBXML_NOCDATA);
-
-    return json_decode(json_encode($raw_xml), true);
-}/*}}}*/
-
-function remote_get($url, $timeout = 3, $retry = 3, array $headers = [], array $cookies = [])
-{/*{{{*/
-    $ch = curl_init();
-
-    curl_setopt_array($ch, [
-        CURLOPT_URL => $url,
-        CURLOPT_TIMEOUT => $timeout,
-        CURLOPT_CONNECTTIMEOUT => $timeout,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_ENCODING => 'gzip',
-        CURLOPT_USERAGENT => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.101 Safari/537.36',
-    ]);
-
-    if ($headers) {
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-    }
-
-    if ($cookies) {
-        curl_setopt ($ch, CURLOPT_COOKIE, http_build_query($cookies, '', ';').';');
-    }
-
-    while ($retry-- > 0) {
-        $res = curl_exec($ch);
-        $errno = curl_errno($ch);
-
-        if (0 === $errno) {
-            break;
-        }
-    }
-
-    $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-
-    curl_close($ch);
-
-    if (404 === $code) {
-        return false;
-    }
-
-    return $res;
-}/*}}}*/
-
-function remote_get_json($url, $timeout = 3, $retry = 3, array $headers = [], array $cookies = [])
-{/*{{{*/
-    return json_decode(remote_get($url, $timeout, $retry, $headers, $cookies), true);
-}/*}}}*/
-
-function remote_get_xml($url, $timeout = 3, $retry = 3, array $headers = [], array $cookies = [])
-{/*{{{*/
-    $raw_res = remote_get($url, $timeout, $retry, $headers, $cookies);
+    $raw_res = http($args);
 
     $raw_xml = simplexml_load_string($raw_res, 'SimpleXMLElement', LIBXML_NOCDATA);
 
