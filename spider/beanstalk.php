@@ -139,7 +139,6 @@ function spider_job_push($job_name, $url = null, $data = [])
 function _spider_job(
     string $cron_string,
     string $url,
-    string $method,
            $data,
     string $format,
            $spider_rule,
@@ -164,7 +163,6 @@ function _spider_job(
     return [
         'cron_string' => $cron_string,
         'url' => $url,
-        'method' => $method,
         'data' => $data,
         'format' => $format,
         'rule' => $spider_rule,
@@ -190,7 +188,6 @@ function spider_job_get(string $job_name, string $cron_string, string $url, stri
     $jobs[$job_name] = _spider_job(
         $cron_string,
         $url,
-        'get',
         [],
         $format,
         $spider_rule,
@@ -218,7 +215,6 @@ function spider_job_post(string $job_name, string $cron_string, string $url, $da
     $jobs[$job_name] = _spider_job(
         $cron_string,
         $url,
-        'post',
         $data,
         $format,
         $spider_rule,
@@ -290,15 +286,7 @@ function spider_watch($config_key = 'spider', $memory_limit = 1048576)
 
         $job = _spider_job_pickup($job_name);
 
-        $res = [];
-
-        if ('get' == $job['method']) {
-
-            $res = spider_run_get($url?:$job['url'], $job['format'], $job['rule']);
-        } else {
-
-            $res = spider_run_post($url?:$job['url'], $data?:$job['data'], $job['format'], $job['rule']);
-        }
+        $res = spider_run($url?:$job['url'], $data?:$job['data'], $job['format'], $job['rule']);
 
         if ($res) {
 
@@ -416,16 +404,13 @@ function _spider_transfer_result($result, $format, $spider_rule)
     return $result_arr;
 }/*}}}*/
 
-function spider_run_get($url, string $format, $spider_rule)
+function spider_run($url, string $format, $spider_rule, $data = [])
 {/*{{{*/
-    $result = remote_get($url, 30);
-
-    return _spider_transfer_result($result, $format, $spider_rule);
-}/*}}}*/
-
-function spider_run_post($url, $data, string $format, $spider_rule)
-{/*{{{*/
-    $result = remote_post($url, $data, 30);
+    $result = http([
+        'url' => $url,
+        'data' => $data,
+        'timeout' => 30,
+    ]);
 
     return _spider_transfer_result($result, $format, $spider_rule);
 }/*}}}*/
