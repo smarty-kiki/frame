@@ -605,11 +605,10 @@ function http($args)
         )
     ) {
 
-        $request_info_data = '';
-
-        if (is_array($request_info['data'])) {
-            $request_info_data = http_build_query($request_info['data']);
-        }
+        $request_info_data =
+            is_array($request_info['data']) ?
+            http_build_query($request_info['data']) :
+            $request_info['data'];
 
         curl_setopt_array($ch, [
             CURLOPT_POST => 1,
