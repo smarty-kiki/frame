@@ -657,12 +657,12 @@ function http($args)
 
     curl_close($ch);
 
-    if (! empty($request_info[0]) && $request_info[0] instanceof closure) {
-        return call_user_func($request_info[0], $res, $code);
-    }
-
     if (! empty($request_info[$code]) && $request_info[$code] instanceof closure) {
         return call_user_func($request_info[$code], $res, $code);
+    }
+
+    if (! empty($request_info[0]) && $request_info[0] instanceof closure) {
+        return call_user_func($request_info[0], $res, $code, $errno);
     }
 
     return $res;
