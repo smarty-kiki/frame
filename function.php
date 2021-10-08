@@ -294,7 +294,11 @@ function str_begin($value, $cap)
 
 function is_url($path)
 {/*{{{*/
-    if (starts_with($path, array('#', '//', 'mailto:', 'tel:'))) {
+    if (! is_string($path)) {
+        return false;
+    }
+
+    if (starts_with($path, ['#', '//', 'mailto:', 'tel:'])) {
         return true;
     }
 
@@ -543,6 +547,122 @@ function datetime_diff($datetime1, $datetime2, $format = '%ts')
         '%ts' => $total_seconds,
     ] as $k => $v) {
         $res = str_replace($k, $v, $res);
+    }
+
+    return $res;
+}/*}}}*/
+
+function http($args)
+{/*{{{*/
+    $request_info = [
+        'url' => 'http://127.0.0.1/',
+        //'method' => 'GET',
+        'data' => [],
+        'header' => [],
+        'cookie' => [],
+        'timeout' => 3,
+        'retry' => 3,
+        'option' => [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => 'gzip',
+            CURLOPT_USERAGENT => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.101 Safari/537.36',
+        ],
+    ];
+
+    if (is_url($args)) {
+        $request_info['url'] = $args;
+    } elseif (is_array($args)) {
+        $request_info = array_replace($request_info, $args);
+    }
+
+    $ch = curl_init();
+
+    if (
+        isset($request_info['method'])
+        && $request_info['method'] === 'GET'
+        && ! empty($request_info['data'])
+    ) {
+        $request_info['url'] = url_transfer($request_info['url'], function ($url_info) use ($request_info) {
+            $url_info['query'] = array_replace($url_info['query'], $request_info['data']);
+            return $url_info;
+        });
+        $request_info['data'] = [];
+    }
+
+    curl_setopt_array($ch, [
+        CURLOPT_URL => $request_info['url'],
+        CURLOPT_TIMEOUT => $request_info['timeout'],
+        CURLOPT_CONNECTTIMEOUT => $request_info['timeout'],
+    ]);
+
+    curl_setopt_array($ch, $request_info['option']);
+
+    if (
+        ! empty($request_info['data'])
+        || (
+            ! empty($request_info['method'])
+            && $request_info['method'] === 'POST'
+        )
+    ) {
+
+        $request_info_data = '';
+
+        if (is_array($request_info['data'])) {
+            $request_info_data = http_build_query($request_info['data']);
+        }
+
+        curl_setopt_array($ch, [
+            CURLOPT_POST => 1,
+            CURLOPT_POSTFIELDS => $request_info_data,
+        ]);
+    }
+
+    if (! empty($request_info['header'])) {
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $request_info['header']);
+    }
+
+    if (! empty($request_info['cookie'])) {
+
+        $request_info_cookie = '';
+
+        if (is_array($request_info['cookie'])) {
+            $request_info_cookie = http_build_query($request_info['cookie'], '', ';').';';
+        }
+
+        curl_setopt($ch, CURLOPT_COOKIE, $request_info_cookie);
+    }
+
+    $retry = $request_info['retry'];
+
+    while ($retry-- > 0) {
+
+        $res = curl_exec($ch);
+        $errno = curl_errno($ch);
+
+        if (CURLE_OK === $errno) {
+            break;
+        }
+    }
+
+    $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    if (0 === $code) {
+        if (CURLE_OPERATION_TIMEDOUT === $errno) {
+            if (! empty($request_info['timeouted']) && $request_info['timeouted'] instanceof closure) {
+                return call_user_func($request_info['timeouted']);
+            }
+        }
+
+        throw new Exception('http url '.$request_info['url'].' '.curl_strerror($errno));
+    }
+
+    curl_close($ch);
+
+    if (! empty($request_info[0]) && $request_info[0] instanceof closure) {
+        return call_user_func($request_info[0], $res, $code);
+    }
+
+    if (! empty($request_info[$code]) && $request_info[$code] instanceof closure) {
+        return call_user_func($request_info[$code], $res, $code);
     }
 
     return $res;
