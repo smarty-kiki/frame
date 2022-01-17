@@ -383,7 +383,7 @@ function db_simple_delete($table, array $wheres, $config_key = 'default')
     return db_delete($sql_template, $binds, $config_key);
 }/*}}}*/
 
-function db_simple_query($table, array $wheres, $option_sql = 'order by id', $config_key = 'default')
+function db_simple_query($table, array $wheres = [], $option_sql = 'order by id', $config_key = 'default')
 {/*{{{*/
     list($where, $binds) = db_simple_where_sql($wheres);
 
@@ -397,7 +397,20 @@ function db_simple_query_first($table, array $wheres, $option_sql = '', $config_
     return db_query_first('select * from `'.$table.'` where '.$where.' '.$option_sql, $binds, $config_key);
 }/*}}}*/
 
-function db_simple_query_indexed($table, $indexed, array $wheres, $option_sql = 'order by id', $config_key = 'default')
+function db_simple_query_column($table, $column, array $wheres = [], $option_sql = '', $config_key = 'default')
+{/*{{{*/
+    $datas = db_simple_query($table, $wheres, $option_sql, $config_key);
+
+    $res = [];
+
+    foreach ($datas as $data) {
+        $res[] = $data[$column];
+    }
+
+    return $res;
+}/*}}}*/
+
+function db_simple_query_indexed($table, $indexed, array $wheres = [], $option_sql = 'order by id', $config_key = 'default')
 {/*{{{*/
     $datas = db_simple_query($table, $wheres, $option_sql, $config_key);
 
