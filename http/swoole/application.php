@@ -728,7 +728,7 @@ function http_ex_action($ex)
     }
 }/*}}}*/
 
-function http_fatel_err_action()
+function http_fatal_err_action()
 {/*{{{*/
     $err = error_get_last();
 
