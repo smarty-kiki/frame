@@ -36,6 +36,11 @@ function uri()
     return $schema.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
 }
 
+function refer_uri()
+{
+    return $_SERVER['HTTP_REFERER'] ?? '';
+}
+
 /**
  * Get the specified URI info.
  *
@@ -72,7 +77,7 @@ function route($rule)
 
     $args = [];
 
-    if ($matched = !empty($matches[0])) {
+    if ($matched = ! empty($matches[0])) {
 
         unset($matches[0]);
 
@@ -113,6 +118,11 @@ function matched_rule($rule = null)
     }
 
     return $container;
+}
+
+function request_method()
+{
+    return $_SERVER['REQUEST_METHOD'];
 }
 
 /**
@@ -203,7 +213,7 @@ function if_verify(closure $action = null)
 {
     static $container = null;
 
-    if (!empty($action)) {
+    if (! empty($action)) {
         return $container = $action;
     }
 
@@ -219,7 +229,7 @@ function if_not_found(closure $action = null)
 {
     static $container = null;
 
-    if (!empty($action)) {
+    if (! empty($action)) {
         return $container = $action;
     }
 
@@ -532,7 +542,7 @@ function view_path($path = null)
 {
     static $container = '';
 
-    if (!empty($path)) {
+    if (! empty($path)) {
         return $container = $path;
     }
 
@@ -564,7 +574,7 @@ function view_compiler(closure $closure = null)
  */
 function render($view, $args = [])
 {
-    if (!empty($args)) {
+    if (! empty($args)) {
         extract($args);
     }
 
@@ -589,7 +599,7 @@ function render($view, $args = [])
  */
 function include_view($view, $args = [])
 {
-    if (!empty($args)) {
+    if (! empty($args)) {
         extract($args);
     }
 
@@ -649,7 +659,7 @@ function if_has_exception(closure $action = null)
 {
     static $container = null;
 
-    if (!empty($action)) {
+    if (! empty($action)) {
         return $container = $action;
     }
 
@@ -679,7 +689,7 @@ function http_fatel_err_action()
 {
     $err = error_get_last();
 
-    if (not_empty($err)) {
+    if (! empty($err)) {
         http_err_action($err['type'], $err['message'], $err['file'], $err['line']);
     }
 }

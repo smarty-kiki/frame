@@ -30,6 +30,13 @@ function otherwise_get_error_info(throwable $ex)
     }
 }/*}}}*/
 
+function otherwise_get_error_message(throwable $ex)
+{/*{{{*/
+    $error_info = otherwise_get_error_info($ex);
+
+    return $error_info['message'];
+}/*}}}*/
+
 function otherwise_error_code($error_code, $assertion, array $replace_contents = [])
 {/*{{{*/
     if (! $assertion) {

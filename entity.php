@@ -210,7 +210,7 @@ abstract class entity implements JsonSerializable, Serializable
 
                         otherwise(
                             isset($validators[$value]),
-                            "$property 的值 $value 未在枚举范围中",
+                            static::$struct_display_names[$property]." 的值 $value 未在枚举范围中",
                             'business_exception',
                             ENTITY_STRUCT_VALIDATOR_ERROR_CODE
                         );
@@ -221,14 +221,14 @@ abstract class entity implements JsonSerializable, Serializable
                             if (isset($validator['reg'])) {
                                 otherwise(
                                     preg_match($validator['reg'], $value),
-                                    $validator['failed_message'],
+                                    static::$struct_display_names[$property].': '.$validator['failed_message'],
                                     'business_exception',
                                     ENTITY_STRUCT_VALIDATOR_ERROR_CODE
                                 );
                             } elseif (isset($validator['function'])) {
                                 otherwise(
                                     call_user_func($validator['function'], $value),
-                                    static::$struct_display_names[$property].$validator['failed_message'],
+                                    static::$struct_display_names[$property].': '.$validator['failed_message'],
                                     'business_exception',
                                     ENTITY_STRUCT_VALIDATOR_ERROR_CODE
                                 );
@@ -694,11 +694,7 @@ class dao
         }
 
         $sql = [
-            'sql_template' => '
-                select * from `'.$this->table_name.'`
-                where id in :ids '.$with_deleted_sql.'
-                order by find_in_set(id, :set)
-            ',
+            'sql_template' => 'select * from `'.$this->table_name.'` where id in :ids '.$with_deleted_sql.' order by find_in_set(id, :set)',
             'binds' => [
                 ':ids' => $ids,
                 ':set' => implode(',', $ids),
@@ -729,6 +725,16 @@ class dao
         }
 
         return $this->find_all_by_sql('select * from `'.$this->table_name.'` '.$with_deleted_sql.' order by id', []);
+    }/*}}}*/
+
+    public function find_all_order_by_id_desc()
+    {/*{{{*/
+        $with_deleted_sql = '';
+        if (! $this->with_deleted) {
+            $with_deleted_sql = 'where delete_time is null';
+        }
+
+        return $this->find_all_by_sql('select * from `'.$this->table_name.'` '.$with_deleted_sql.' order by id desc', []);
     }/*}}}*/
 
     public function find_all_by_column(array $columns)
@@ -889,7 +895,7 @@ class dao
         return db_query_value('count', $sql, $binds, $this->db_config_key);
     }/*}}}*/
 
-    final private function get_dirty($entity)
+    private function get_dirty($entity)
     {/*{{{*/
         $rows = [];
 
@@ -906,7 +912,7 @@ class dao
         return $rows;
     }/*}}}*/
 
-    final private function row_to_entity($rows)
+    private function row_to_entity($rows)
     {/*{{{*/
         $entity = new $this->class_name();
 
