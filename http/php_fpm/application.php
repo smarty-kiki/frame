@@ -5,7 +5,7 @@
  *
  * @return bool
  */
-function is_https()
+function is_https(): bool
 {
     if (isset($_SERVER['HTTPS']) && (strtolower($_SERVER['HTTPS']) == 'on' || $_SERVER['HTTPS'] == 1)) {
         return true;
@@ -18,10 +18,15 @@ function is_https()
     return false;
 }
 
-function is_ajax()
+/**
+ * if is ajax.
+ *
+ * @return bool
+ */
+function is_ajax(): bool
 {
     return (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest')
-        || (! empty($_POST['VAR_AJAX_SUBMIT']) || ! empty($_GET['VAR_AJAX_SUBMIT']) ? true : false);
+        || ! empty($_POST['VAR_AJAX_SUBMIT']) || ! empty($_GET['VAR_AJAX_SUBMIT']);
 }
 
 /**
@@ -29,14 +34,19 @@ function is_ajax()
  *
  * @return string
  */
-function uri()
+function uri(): string
 {
     $schema = is_https() ? 'https://' : 'http://';
 
     return $schema.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
 }
 
-function refer_uri()
+/**
+ * Get the refer URI.
+ *
+ * @return string
+ */
+function refer_uri(): string
 {
     return $_SERVER['HTTP_REFERER'] ?? '';
 }
@@ -44,11 +54,11 @@ function refer_uri()
 /**
  * Get the specified URI info.
  *
- * @param string $name
+ * @param string|null $name
  *
  * @return mixed
  */
-function uri_info($name = null)
+function uri_info(string $name = null)
 {
     static $container = [];
 
@@ -69,7 +79,7 @@ function uri_info($name = null)
  *
  * @return array
  */
-function route($rule)
+function route(string $rule): array
 {
     $reg = '/^'.str_replace('\*', '([^\/]+?)', preg_quote($rule, '/')).'$/';
 
@@ -93,9 +103,11 @@ function route($rule)
  * Flush the action result.
  *
  * @param closure $action
- * @param array   $args
+ * @param array $args
+ * @param closure|null $verify
+ * @return null
  */
-function flush_action(closure $action, $args = [], closure $verify = null)
+function flush_action(closure $action, array $args = [], closure $verify = null)
 {
     if (is_null($verify)) {
         $output = $action(...$args);
@@ -109,11 +121,17 @@ function flush_action(closure $action, $args = [], closure $verify = null)
     }
 }
 
-function matched_rule($rule = null)
+/**
+ * Get the matched rule.
+ *
+ * @param string|null $rule
+ * @return string|null
+ */
+function matched_rule(string $rule = null): ?string
 {
     static $container = null;
 
-    if (!is_null($rule)) {
+    if (! is_null($rule)) {
         return $container = $rule;
     }
 
@@ -128,10 +146,10 @@ function request_method()
 /**
  * Route for all method.
  *
- * @param string  $rule
+ * @param string $rule
  * @param closure $action
  */
-function if_any($rule, closure $action)
+function if_any(string $rule, closure $action)
 {
     list($matched, $args) = route($rule);
 
@@ -147,10 +165,10 @@ function if_any($rule, closure $action)
 /**
  * Route for get method.
  *
- * @param string  $rule
+ * @param string $rule
  * @param closure $action
  */
-function if_get($rule, closure $action)
+function if_get(string $rule, closure $action)
 {
     if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
         return;
@@ -162,10 +180,10 @@ function if_get($rule, closure $action)
 /**
  * Route for post method.
  *
- * @param string  $rule
+ * @param string $rule
  * @param closure $action
  */
-function if_post($rule, closure $action)
+function if_post(string $rule, closure $action)
 {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         return;
@@ -177,10 +195,10 @@ function if_post($rule, closure $action)
 /**
  * Route for put method.
  *
- * @param string  $rule
+ * @param string $rule
  * @param closure $action
  */
-function if_put($rule, closure $action)
+function if_put(string $rule, closure $action)
 {
     if ($_SERVER['REQUEST_METHOD'] !== 'PUT') {
         return;
@@ -192,10 +210,10 @@ function if_put($rule, closure $action)
 /**
  * Route for delete method.
  *
- * @param string  $rule
+ * @param string $rule
  * @param closure $action
  */
-function if_delete($rule, closure $action)
+function if_delete(string $rule, closure $action)
 {
     if ($_SERVER['REQUEST_METHOD'] !== 'DELETE') {
         return;
@@ -207,9 +225,10 @@ function if_delete($rule, closure $action)
 /**
  * Get or set the verify closure.
  *
- * @param closure $action
+ * @param closure|null $action
+ * @return closure|null
  */
-function if_verify(closure $action = null)
+function if_verify(closure $action = null): ?closure
 {
     static $container = null;
 
@@ -223,9 +242,10 @@ function if_verify(closure $action = null)
 /**
  * Get or set the 404 handler.
  *
- * @param closure $action
+ * @param closure|null $action
+ * @return closure|null
  */
-function if_not_found(closure $action = null)
+function if_not_found(closure $action = null): ?closure
 {
     static $container = null;
 
@@ -239,9 +259,9 @@ function if_not_found(closure $action = null)
 /**
  * Redirect to 404.
  *
- * @param mix $action
+ * @param closure|null $action
  */
-function not_found($action = null)
+function not_found(closure $action = null)
 {
     header('HTTP/1.1 404 Not Found');
     header('status: 404 Not Found');
@@ -262,15 +282,15 @@ function not_found($action = null)
 /**
  * Redirect to a URI.
  *
- * @param string $uri
- * @param bool   $forever
+ * @param string|null $uri
+ * @param bool $forever
+ * @return array
  */
-function redirect($uri = null, $forever = false)
+function redirect(string $uri = null, bool $forever = false): array
 {
     static $container = [];
 
     if (! is_null($uri)) {
-
         $container = [
             'uri' => $uri,
             'forever' => $forever,
@@ -280,31 +300,39 @@ function redirect($uri = null, $forever = false)
     return $container;
 }
 
-function trigger_redirect()
+function trigger_redirect($uri = null, $forever = false)
 {/*{{{*/
-    $redirect_info = redirect();
 
-    if (! empty($redirect_info['uri'])) {
+    if (is_null($uri)) {
 
-        if ($redirect_info['forever']) {
+        $redirect_info = redirect();
+        if (! empty($redirect_info)) {
+            $uri = $redirect_info['uri'];
+            $forever = $redirect_info['forever'];
+        }
+    }
+
+    if (! is_null($uri)) {
+
+        if ($forever) {
             header('HTTP/1.1 301 Moved Permanently');
         } else {
             header('HTTP/1.1 302 Found');
         }
 
-        header('Location: '.$redirect_info['uri']);
+        header('Location: '.$uri);
     }
 }/*}}}*/
 
 /**
- * Get specified _GET/_POST without filte XSS.
+ * Get specified _GET/_POST without filter XSS.
  *
  * @param string $name
- * @param mix    $default
+ * @param     $default
  *
  * @return mixed
  */
-function input_safe($name, $default = null)
+function input_safe(string $name, $default = null)
 {
     if (isset($_POST[$name])) {
         return filter_input(INPUT_POST, $name, FILTER_SANITIZE_SPECIAL_CHARS);
@@ -321,11 +349,11 @@ function input_safe($name, $default = null)
  * Get specified _GET, _POST.
  *
  * @param string $name
- * @param mix    $default
+ * @param     $default
  *
  * @return mixed
  */
-function input($name, $default = null)
+function input(string $name, $default = null)
 {
     if (isset($_POST[$name])) {
         return $_POST[$name];
@@ -341,11 +369,10 @@ function input($name, $default = null)
 /**
  * Get specified _GET/_POST array.
  *
- * @param string $name ..
- *
+ * @param mixed ...$names
  * @return array
  */
-function input_list(...$names)
+function input_list(...$names): array
 {
     if (empty($names)) {
         return [];
@@ -366,7 +393,7 @@ function input_list(...$names)
  * @param mixed $name
  * @param mixed $default
  * @access public
- * @return mix
+ * @return mixed
  */
 function input_json($name, $default = null)
 {
@@ -383,9 +410,10 @@ function input_json($name, $default = null)
  * Get items from Json Decode _POST using "dot" notation.
  *
  * @access public
+ * @param mixed ...$names
  * @return array
  */
-function input_json_list(...$names)
+function input_json_list(...$names): array
 {
     if (empty($names)) {
         return [];
@@ -418,9 +446,10 @@ function input_xml($name, $default = null)
  * Get items from Json Decode _POST using "dot" notation.
  *
  * @access public
+ * @param mixed ...$names
  * @return array
  */
-function input_xml_list(...$names)
+function input_xml_list(...$names): array
 {
     if (empty($names)) {
         return [];
@@ -446,13 +475,13 @@ function input_file($name, $default = [])
 }
 
 /**
- * Get specified cookie without filte XSS.
+ * Get specified cookie without filter XSS.
  *
  * @param string $name
- *
+ * @param null $default
  * @return mixed
  */
-function cookie_safe($name, $default = null)
+function cookie_safe(string $name, $default = null)
 {
     if (isset($_COOKIE[$name])) {
         return filter_input(INPUT_COOKIE, $name, FILTER_SANITIZE_SPECIAL_CHARS);
@@ -465,10 +494,10 @@ function cookie_safe($name, $default = null)
  * Get specified _COOKIE.
  *
  * @param string $name
- *
+ * @param string|null $default
  * @return mixed
  */
-function cookie($name, $default = null)
+function cookie(string $name, string $default = null): ?string
 {
     if (isset($_COOKIE[$name])) {
         return $_COOKIE[$name];
@@ -480,11 +509,10 @@ function cookie($name, $default = null)
 /**
  * Get specified _COOKIE array.
  *
- * @param string $name ..
- *
- * @return mixed
+ * @param mixed ...$names
+ * @return array
  */
-function cookie_list(...$names)
+function cookie_list(...$names): array
 {
     if (empty($names)) {
         return [];
@@ -517,7 +545,7 @@ function server($name, $default = null)
     return $default;
 }
 
-function server_list(...$names)
+function server_list(...$names): array
 {
     if (empty($names)) {
         return [];
@@ -535,10 +563,10 @@ function server_list(...$names)
 /**
  * Set or get view file path.
  *
- * @param string $path
+ * @param string|null $path
  * @return string
  */
-function view_path($path = null)
+function view_path(string $path = null): string
 {
     static $container = '';
 
@@ -549,7 +577,7 @@ function view_path($path = null)
     return $container;
 }
 
-function view_compiler(closure $closure = null)
+function view_compiler(closure $closure = null): ?closure
 {
     static $container = null;
 
@@ -570,9 +598,10 @@ function view_compiler(closure $closure = null)
  * Render view.
  *
  * @param string $view
- * @param array  $args
+ * @param array $args
+ * @return false|string
  */
-function render($view, $args = [])
+function render(string $view, array $args = [])
 {
     if (! empty($args)) {
         extract($args);
@@ -595,9 +624,9 @@ function render($view, $args = [])
  * include view and send arguments.
  *
  * @param string $view
- * @param array  $args
+ * @param array $args
  */
-function include_view($view, $args = [])
+function include_view(string $view, array $args = [])
 {
     if (! empty($args)) {
         extract($args);
@@ -627,7 +656,7 @@ function cache_with_etag($etag)
  *
  * @return string
  */
-function ip()
+function ip(): string
 {
     static $container = null;
 
@@ -653,9 +682,10 @@ function ip()
 /**
  * Get or set the exception handler.
  *
- * @param closure $action
+ * @param closure|null $action
+ * @return closure|null
  */
-function if_has_exception(closure $action = null)
+function if_has_exception(closure $action = null): ?closure
 {
     static $container = null;
 
