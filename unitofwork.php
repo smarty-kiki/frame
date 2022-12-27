@@ -1,8 +1,8 @@
 <?php
 
-define('IDGENTER_CACHE_MIDWARE_KEY', 'idgenter');
-define('IDGENTER_CACHE_KEY_SUFFIX', '_last_id');
-define('UNITOFWORK_DEFAULT_ERROR_CODE', 'UNITOFWORK_DEFAULT_ERROR');
+const IDGENTER_CACHE_MIDWARE_KEY = 'idgenter';
+const IDGENTER_CACHE_KEY_SUFFIX = '_last_id';
+const UNITOFWORK_DEFAULT_ERROR_CODE = 'UNITOFWORK_DEFAULT_ERROR';
 
 function unit_of_work_db_config_key($config_key = null)
 {
