@@ -138,7 +138,25 @@ function llm_chat(array $messages, $tools = [])
     $payload['messages'] = $messages;
     $payload['tools'] = $tools;
 
-    return _minimax_coding_plan_request(MINIMAX_CODING_PLAN_CHAT_URL, 'POST', $payload);
+    $started_at = microtime(true);
+    $response = _minimax_coding_plan_request(MINIMAX_CODING_PLAN_CHAT_URL, 'POST', $payload);
+    $finished_at = microtime(true);
+    $assistant_message = llm_pick_response_message($response);
+
+    $log_message = json_encode([
+        'started_at' => datetime((int) $started_at),
+        'finished_at' => datetime((int) $finished_at),
+        'duration_ms' => (int) round(($finished_at - $started_at) * 1000),
+        'messages' => $messages,
+        'response' => $response,
+        'assistant_message' => $assistant_message,
+    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+    if ($log_message !== false) {
+        log_module('minimax_coding_plan', $log_message);
+    }
+
+    return $response;
 }/*}}}*/
 
 function llm_remains()
