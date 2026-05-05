@@ -24,7 +24,7 @@ function _redis_connection(array $config)
             $redis = new Redis();
 
             if ($is_sock) {
-                $redis->connect($config['sock'], $config['timeout']);
+                $redis->connect($config['sock']);
             } else {
                 $redis->connect($config['host'], $config['port'], $config['timeout']);
             }
