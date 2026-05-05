@@ -271,10 +271,10 @@ function not_found(closure $action = null)
         exit;
     }
 
-    $action = if_not_found();
+    $preset_action = if_not_found();
 
-    if ($action instanceof closure) {
-        flush_action($action, func_get_args());
+    if ($preset_action instanceof closure) {
+        flush_action($preset_action, func_get_args());
         exit;
     }
 }
