@@ -120,7 +120,7 @@ abstract class entity implements JsonSerializable, Serializable
         return dao(get_class($this));
     }
 
-    public function jsonSerialize()
+    public function jsonSerialize(): array
     {
         foreach ($this->json_attributes as $key => $attribute) {
             if (empty($attribute)) {

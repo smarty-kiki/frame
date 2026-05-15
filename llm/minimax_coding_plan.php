@@ -62,7 +62,7 @@ function llm_pick_response_message($response)
 
     $res = [
         'role' => $message['role'],
-        'content' => $message['content'],
+        'content' => $message['content'] ?? null,
     ];
 
     if (array_key_exists('tool_calls', $message)) {
@@ -150,7 +150,7 @@ function llm_chat(array $messages, $tools = [])
         'messages' => $messages,
         'response' => $response,
         'assistant_message' => $assistant_message,
-    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
 
     if ($log_message !== false) {
         log_module('minimax_coding_plan', $log_message);

@@ -4,6 +4,9 @@
  * response
  */
 
+/**
+ * 用途: 保存或读取本轮要返回给用户看的 assistant 消息缓存。
+ */
 function _agent_staged_response_messages($messages = null)
 {/*{{{*/
     static $container = [];
@@ -15,6 +18,9 @@ function _agent_staged_response_messages($messages = null)
     return $container = $messages;
 }/*}}}*/
 
+/**
+ * 用途: 把合法的 assistant 消息转成用户可见内容并暂存。
+ */
 function _agent_stage_response_message($message)
 {/*{{{*/
     $messages = _agent_staged_response_messages();
@@ -29,6 +35,9 @@ function _agent_stage_response_message($message)
     return _agent_staged_response_messages($messages);
 }/*}}}*/
 
+/**
+ * 用途: 取出并清空本轮暂存的用户可见回复消息。
+ */
 function _agent_pick_staged_response_messages()
 {/*{{{*/
     $messages = _agent_staged_response_messages();
@@ -38,6 +47,9 @@ function _agent_pick_staged_response_messages()
     return $messages;
 }/*}}}*/
 
+/**
+ * 用途: 解析 assistant content 中的 JSON 协议载荷并校验必需字段。
+ */
 function _agent_message_payload(array $message): array
 {/*{{{*/
     $content = $message['content'] ?? null;
@@ -67,6 +79,9 @@ function _agent_message_payload(array $message): array
     return $payload;
 }/*}}}*/
 
+/**
+ * 用途: 把 assistant 协议消息转换成只包含用户可见 content 的消息。
+ */
 function _agent_message_user_visible_message(array $message): array
 {/*{{{*/
     $payload = _agent_message_payload($message);
@@ -76,6 +91,9 @@ function _agent_message_user_visible_message(array $message): array
     return $message;
 }/*}}}*/
 
+/**
+ * 用途: 读取并校验 assistant 协议消息里的任务状态。
+ */
 function _agent_message_task_state(array $message)
 {/*{{{*/
     $payload = _agent_message_payload($message);
@@ -91,11 +109,28 @@ function _agent_message_task_state(array $message)
 }/*}}}*/
 
 /**
+ * 用途: 检查 assistant 消息是否符合响应 JSON 协议并返回错误原因。
+ */
+function _agent_message_response_format_error(array $message)
+{/*{{{*/
+    try {
+        _agent_message_task_state($message);
+
+        return '';
+    } catch (throwable $exception) {
+        return otherwise_get_error_message($exception);
+    }
+}/*}}}*/
+
+/**
  * session
  */
 
 /**
  * 注册闭包调用参数: ($user_name)
+ */
+/**
+ * 用途: 注册或获取根据用户名生成 session key 的回调。
  */
 function if_get_session_key(closure $closure = null): ?closure
 {/*{{{*/
@@ -111,6 +146,9 @@ function if_get_session_key(closure $closure = null): ?closure
 /**
  * 注册闭包调用参数: ($session_key)
  */
+/**
+ * 用途: 注册或获取读取用户会话消息列表的回调。
+ */
 function if_read_user_session_messages(closure $closure = null): ?closure
 {/*{{{*/
     static $container = null;
@@ -124,6 +162,9 @@ function if_read_user_session_messages(closure $closure = null): ?closure
 
 /**
  * 注册闭包调用参数: ($session_key, $message)
+ */
+/**
+ * 用途: 注册或获取向用户会话追加消息的回调。
  */
 function if_append_user_session_message(closure $closure = null): ?closure
 {/*{{{*/
@@ -139,6 +180,9 @@ function if_append_user_session_message(closure $closure = null): ?closure
 /**
  * 注册闭包调用参数: ($session_key, $messages)
  */
+/**
+ * 用途: 注册或获取覆盖用户会话消息列表的回调。
+ */
 function if_overwrite_user_session_messages(closure $closure = null): ?closure
 {/*{{{*/
     static $container = null;
@@ -153,6 +197,9 @@ function if_overwrite_user_session_messages(closure $closure = null): ?closure
 /**
  * 注册闭包调用参数: ($session_key)
  */
+/**
+ * 用途: 注册或获取重置用户会话消息的回调。
+ */
 function if_reset_user_session_messages(closure $closure = null): ?closure
 {/*{{{*/
     static $container = null;
@@ -164,6 +211,9 @@ function if_reset_user_session_messages(closure $closure = null): ?closure
     return $container;
 }/*}}}*/
 
+/**
+ * 用途: 通过已注册回调获取指定用户的 session key。
+ */
 function _user_session_key(string $user_name)
 {/*{{{*/
     $get_session_key_closure = if_get_session_key();
@@ -176,6 +226,9 @@ function _user_session_key(string $user_name)
     return $get_session_key_closure($user_name);
 }/*}}}*/
 
+/**
+ * 用途: 读取指定用户当前保存的会话消息。
+ */
 function _user_session_messages(string $user_name): array
 {/*{{{*/
     $session_key = _user_session_key($user_name);
@@ -194,6 +247,9 @@ function _user_session_messages(string $user_name): array
     return (array) $read_user_session_messages_closure($session_key);
 }/*}}}*/
 
+/**
+ * 用途: 向指定用户会话追加一条消息并返回更新后的会话。
+ */
 function _user_session_append_message(string $user_name, array $message): array
 {/*{{{*/
     $session_key = _user_session_key($user_name);
@@ -212,6 +268,9 @@ function _user_session_append_message(string $user_name, array $message): array
     return (array) $append_user_session_message_closure($session_key, $message);
 }/*}}}*/
 
+/**
+ * 用途: 用指定消息列表覆盖用户会话并返回结果。
+ */
 function _user_session_overwrite_messages(string $user_name, array $messages): array
 {/*{{{*/
     $session_key = _user_session_key($user_name);
@@ -230,6 +289,9 @@ function _user_session_overwrite_messages(string $user_name, array $messages): a
     return (array) $overwrite_user_session_messages_closure($session_key, $messages);
 }/*}}}*/
 
+/**
+ * 用途: 清空指定用户会话消息并返回结果。
+ */
 function _user_session_reset_messages(string $user_name): array
 {/*{{{*/
     $session_key = _user_session_key($user_name);
@@ -248,11 +310,17 @@ function _user_session_reset_messages(string $user_name): array
     return (array) $reset_user_session_messages_closure($session_key);
 }/*}}}*/
 
+/**
+ * 用途: 对外读取指定用户会话消息。
+ */
 function user_session(string $user_name): array
 {/*{{{*/
     return _user_session_messages($user_name);
 }/*}}}*/
 
+/**
+ * 用途: 压缩用户长会话并覆盖写回 session。
+ */
 function user_session_compress(string $user_name): array
 {/*{{{*/
     $messages = _user_session_messages($user_name);
@@ -263,6 +331,9 @@ function user_session_compress(string $user_name): array
     return _user_session_overwrite_messages($user_name, $compressed_messages);
 }/*}}}*/
 
+/**
+ * 用途: 对外重置指定用户会话。
+ */
 function user_session_reset(string $user_name): array
 {/*{{{*/
     return _user_session_reset_messages($user_name);
@@ -274,6 +345,9 @@ function user_session_reset(string $user_name): array
 
 /**
  * 注册闭包调用参数: ($path, $user_name)
+ */
+/**
+ * 用途: 注册或获取文件读取权限判断回调。
  */
 function if_agent_tool_read_permission(closure $closure = null): ?closure
 {/*{{{*/
@@ -289,6 +363,9 @@ function if_agent_tool_read_permission(closure $closure = null): ?closure
 /**
  * 注册闭包调用参数: ($path, $user_name)
  */
+/**
+ * 用途: 注册或获取目录读取权限判断回调。
+ */
 function if_agent_tool_read_directory_permission(closure $closure = null): ?closure
 {/*{{{*/
     static $container = null;
@@ -302,6 +379,9 @@ function if_agent_tool_read_directory_permission(closure $closure = null): ?clos
 
 /**
  * 注册闭包调用参数: ($path, $user_name)
+ */
+/**
+ * 用途: 注册或获取文件写入权限判断回调。
  */
 function if_agent_tool_write_permission(closure $closure = null): ?closure
 {/*{{{*/
@@ -317,6 +397,9 @@ function if_agent_tool_write_permission(closure $closure = null): ?closure
 /**
  * 注册闭包调用参数: ($path, $user_name)
  */
+/**
+ * 用途: 注册或获取目录删除权限判断回调。
+ */
 function if_agent_tool_delete_directory_permission(closure $closure = null): ?closure
 {/*{{{*/
     static $container = null;
@@ -330,6 +413,9 @@ function if_agent_tool_delete_directory_permission(closure $closure = null): ?cl
 
 /**
  * 注册闭包调用参数: ($path, $user_name)
+ */
+/**
+ * 用途: 注册或获取文件删除权限判断回调。
  */
 function if_agent_tool_delete_permission(closure $closure = null): ?closure
 {/*{{{*/
@@ -345,6 +431,9 @@ function if_agent_tool_delete_permission(closure $closure = null): ?closure
 /**
  * 注册闭包调用参数: ($cwd, $user_name, $command)
  */
+/**
+ * 用途: 注册或获取命令执行权限判断回调。
+ */
 function if_agent_tool_run_command_permission(closure $closure = null): ?closure
 {/*{{{*/
     static $container = null;
@@ -356,6 +445,9 @@ function if_agent_tool_run_command_permission(closure $closure = null): ?closure
     return $container;
 }/*}}}*/
 
+/**
+ * 用途: 生成供 system prompt 描述用的工具简要信息。
+ */
 function _agent_tool_simple_infos(array $tool_names = [])
 {/*{{{*/
     $infos = [];
@@ -387,6 +479,9 @@ function _agent_tool_simple_infos(array $tool_names = [])
     return $infos;
 }/*}}}*/
 
+/**
+ * 用途: 定义并缓存 agent 可用的内置工具集合。
+ */
 function _agent_tools()
 {/*{{{*/
     static $container = null;
@@ -502,6 +597,9 @@ function _agent_tools()
     return $container;
 }/*}}}*/
 
+/**
+ * 用途: 按工具名从内置工具集合中取出工具定义。
+ */
 function _agent_tool_pickup($name)
 {/*{{{*/
     $tools = _agent_tools();
@@ -514,6 +612,9 @@ function _agent_tool_pickup($name)
     return $tools[$name];
 }/*}}}*/
 
+/**
+ * 用途: 生成传给 LLM tool calling 接口的工具 schema。
+ */
 function _agent_llm_tool_infos(array $tool_names = [])
 {/*{{{*/
     $infos = [];
@@ -547,6 +648,9 @@ function _agent_llm_tool_infos(array $tool_names = [])
     return $infos;
 }/*}}}*/
 
+/**
+ * 用途: 解析单次 tool call 的 JSON 参数。
+ */
 function _agent_tool_call_arguments(array $tool_call): array
 {/*{{{*/
     $arguments = array_get($tool_call, 'function.arguments', '');
@@ -569,6 +673,9 @@ function _agent_tool_call_arguments(array $tool_call): array
     return $decoded_arguments;
 }/*}}}*/
 
+/**
+ * 用途: 把工具执行结果转换成 tool message 的字符串 content。
+ */
 function _agent_tool_result_content($result)
 {/*{{{*/
     if (is_string($result)) {
@@ -582,19 +689,9 @@ function _agent_tool_result_content($result)
     return json($result);
 }/*}}}*/
 
-function _agent_tool_user_name(array $tool_call, array $arguments = [])
-{/*{{{*/
-    if (array_key_exists('user_name', $arguments)) {
-        return $arguments['user_name'];
-    }
-
-    if (array_key_exists('user_name', $tool_call)) {
-        return $tool_call['user_name'];
-    }
-
-    throw new Exception('工具调用缺少 user_name');
-}/*}}}*/
-
+/**
+ * 用途: 校验指定用户是否有文件读取权限。
+ */
 function _agent_tool_assert_read_permission($path, string $user_name)
 {/*{{{*/
     $permission_closure = if_agent_tool_read_permission();
@@ -610,6 +707,9 @@ function _agent_tool_assert_read_permission($path, string $user_name)
     );
 }/*}}}*/
 
+/**
+ * 用途: 校验指定用户是否有目录读取权限。
+ */
 function _agent_tool_assert_read_directory_permission($path, string $user_name)
 {/*{{{*/
     $permission_closure = if_agent_tool_read_directory_permission();
@@ -625,6 +725,9 @@ function _agent_tool_assert_read_directory_permission($path, string $user_name)
     );
 }/*}}}*/
 
+/**
+ * 用途: 校验指定用户是否有文件写入权限。
+ */
 function _agent_tool_assert_write_permission($path, string $user_name)
 {/*{{{*/
     $permission_closure = if_agent_tool_write_permission();
@@ -640,6 +743,9 @@ function _agent_tool_assert_write_permission($path, string $user_name)
     );
 }/*}}}*/
 
+/**
+ * 用途: 校验指定用户是否有目录删除权限。
+ */
 function _agent_tool_assert_delete_directory_permission($path, string $user_name)
 {/*{{{*/
     $permission_closure = if_agent_tool_delete_directory_permission();
@@ -655,6 +761,9 @@ function _agent_tool_assert_delete_directory_permission($path, string $user_name
     );
 }/*}}}*/
 
+/**
+ * 用途: 校验指定用户是否有文件删除权限。
+ */
 function _agent_tool_assert_delete_permission($path, string $user_name)
 {/*{{{*/
     $permission_closure = if_agent_tool_delete_permission();
@@ -670,6 +779,9 @@ function _agent_tool_assert_delete_permission($path, string $user_name)
     );
 }/*}}}*/
 
+/**
+ * 用途: 校验指定用户是否有命令执行权限。
+ */
 function _agent_tool_assert_run_command_permission($cwd, string $user_name, $command)
 {/*{{{*/
     $permission_closure = if_agent_tool_run_command_permission();
@@ -685,6 +797,9 @@ function _agent_tool_assert_run_command_permission($cwd, string $user_name, $com
     );
 }/*}}}*/
 
+/**
+ * 用途: 构建目录树中的单个文件或目录节点信息。
+ */
 function _agent_tool_directory_entry($path, $depth, $now_depth = 1)
 {/*{{{*/
     $entry = [
@@ -700,6 +815,9 @@ function _agent_tool_directory_entry($path, $depth, $now_depth = 1)
     return $entry;
 }/*}}}*/
 
+/**
+ * 用途: 扫描目录并构建指定深度的目录节点列表。
+ */
 function _agent_tool_directory_entries($path, $depth, $now_depth = 1)
 {/*{{{*/
     $entries = [];
@@ -715,6 +833,9 @@ function _agent_tool_directory_entries($path, $depth, $now_depth = 1)
     return $entries;
 }/*}}}*/
 
+/**
+ * 用途: 执行目录读取工具逻辑并返回目录结构。
+ */
 function _agent_tool_directory_read($path, string $user_name, $depth = 1)
 {/*{{{*/
     _agent_tool_assert_read_directory_permission($path, $user_name);
@@ -738,6 +859,9 @@ function _agent_tool_directory_read($path, string $user_name, $depth = 1)
     ];
 }/*}}}*/
 
+/**
+ * 用途: 执行文件读取工具逻辑并支持按行范围读取。
+ */
 function _agent_tool_file_read($path, string $user_name, $start_line = null, $end_line = null)
 {/*{{{*/
     _agent_tool_assert_read_permission($path, $user_name);
@@ -771,6 +895,9 @@ function _agent_tool_file_read($path, string $user_name, $start_line = null, $en
     return implode('', array_slice($lines, $start_line - 1, $end_line - $start_line + 1));
 }/*}}}*/
 
+/**
+ * 用途: 执行文件写入工具逻辑并支持覆盖或追加。
+ */
 function _agent_tool_file_write($path, $content, string $user_name, $append = false)
 {/*{{{*/
     _agent_tool_assert_write_permission($path, $user_name);
@@ -796,6 +923,9 @@ function _agent_tool_file_write($path, $content, string $user_name, $append = fa
     return $bytes;
 }/*}}}*/
 
+/**
+ * 用途: 递归删除目录内的所有子项。
+ */
 function _agent_tool_directory_delete_entries($path)
 {/*{{{*/
     foreach (scandir($path) as $name) {
@@ -821,6 +951,9 @@ function _agent_tool_directory_delete_entries($path)
     }
 }/*}}}*/
 
+/**
+ * 用途: 执行文件删除工具逻辑。
+ */
 function _agent_tool_file_delete($path, string $user_name)
 {/*{{{*/
     _agent_tool_assert_delete_permission($path, $user_name);
@@ -838,6 +971,9 @@ function _agent_tool_file_delete($path, string $user_name)
     return true;
 }/*}}}*/
 
+/**
+ * 用途: 执行目录递归删除工具逻辑。
+ */
 function _agent_tool_directory_delete($path, string $user_name)
 {/*{{{*/
     _agent_tool_assert_delete_directory_permission($path, $user_name);
@@ -857,6 +993,9 @@ function _agent_tool_directory_delete($path, string $user_name)
     return true;
 }/*}}}*/
 
+/**
+ * 用途: 执行命令行工具逻辑并返回退出码和输出。
+ */
 function _agent_tool_run_command($command, string $user_name, $cwd = null)
 {/*{{{*/
     _agent_tool_assert_run_command_permission($cwd, $user_name, $command);
@@ -896,8 +1035,16 @@ function _agent_tool_run_command($command, string $user_name, $cwd = null)
     }
 }/*}}}*/
 
-function _agent_tool_call_result($tool_call)
+/**
+ * 用途: 执行单个 tool call 并包装成功或失败结果。
+ */
+function _agent_tool_call_result($tool_call, string $user_name)
 {/*{{{*/
+    otherwise(
+        not_empty($user_name),
+        '工具调用缺少 user_name'
+    );
+
     $tool_name = array_get($tool_call, 'function.name');
 
     otherwise(
@@ -908,7 +1055,6 @@ function _agent_tool_call_result($tool_call)
     $tool = _agent_tool_pickup($tool_name);
 
     $arguments = _agent_tool_call_arguments($tool_call);
-    $user_name = _agent_tool_user_name($tool_call, $arguments);
 
     try {
         $result = call_user_func($tool['closure'], $arguments, $tool_call, $user_name);
@@ -929,7 +1075,10 @@ function _agent_tool_call_result($tool_call)
     }
 }/*}}}*/
 
-function _agent_tool_call($tool_call)
+/**
+ * 用途: 把单个 tool call 执行结果包装成 LLM tool message。
+ */
+function _agent_tool_call($tool_call, string $user_name)
 {/*{{{*/
     $tool_call_id = array_get($tool_call, 'id');
 
@@ -940,26 +1089,27 @@ function _agent_tool_call($tool_call)
 
     return llm_tool_message(
         $tool_call_id,
-        _agent_tool_result_content(_agent_tool_call_result($tool_call))
+        _agent_tool_result_content(_agent_tool_call_result($tool_call, $user_name))
     );
 }/*}}}*/
 
-function _agent_tool_calls(array $tool_calls)
+/**
+ * 用途: 批量执行已提取的 tool calls 并返回 tool messages。
+ */
+function _agent_tool_calls(array $tool_calls, string $user_name)
 {/*{{{*/
     $messages = [];
 
     foreach ($tool_calls as $tool_call) {
-        $messages[] = _agent_tool_call($tool_call);
+        $messages[] = _agent_tool_call($tool_call, $user_name);
     }
 
     return $messages;
 }/*}}}*/
 
-function _agent_message_tool_calls(array $message)
-{/*{{{*/
-    return _agent_tool_calls(llm_if_need_tool_calls($message));
-}/*}}}*/
-
+/**
+ * 用途: 把工具参数里的字符串值解析成布尔值。
+ */
 function _agent_tool_bool($value)
 {/*{{{*/
     return in_array(strtolower((string) $value), ['1', 'true', 'yes', 'y', 'on', 'append']);
@@ -971,6 +1121,9 @@ function _agent_tool_bool($value)
 
 /**
  * 注册闭包调用参数: ($user_name)
+ */
+/**
+ * 用途: 注册或获取读取用户长期记忆的回调。
  */
 function if_get_user_memory(closure $closure = null): ?closure
 {/*{{{*/
@@ -986,6 +1139,9 @@ function if_get_user_memory(closure $closure = null): ?closure
 /**
  * 注册闭包调用参数: ($messages, $user_name)
  */
+/**
+ * 用途: 注册或获取从会话消息提取用户记忆的回调。
+ */
 function if_extract_user_memory_from_messages(closure $closure = null): ?closure
 {/*{{{*/
     static $container = null;
@@ -999,6 +1155,9 @@ function if_extract_user_memory_from_messages(closure $closure = null): ?closure
 
 /**
  * 注册闭包调用参数: ($memory, $user_name)
+ */
+/**
+ * 用途: 注册或获取整理用户记忆的回调。
  */
 function if_organize_user_memory(closure $closure = null): ?closure
 {/*{{{*/
@@ -1014,6 +1173,9 @@ function if_organize_user_memory(closure $closure = null): ?closure
 /**
  * 注册闭包调用参数: ($memory, $user_name)
  */
+/**
+ * 用途: 注册或获取保存用户记忆的回调。
+ */
 function if_store_user_memory(closure $closure = null): ?closure
 {/*{{{*/
     static $container = null;
@@ -1025,6 +1187,9 @@ function if_store_user_memory(closure $closure = null): ?closure
     return $container;
 }/*}}}*/
 
+/**
+ * 用途: 读取指定用户的长期记忆。
+ */
 function _user_memory(string $user_name)
 {/*{{{*/
     $get_user_memory_closure = if_get_user_memory();
@@ -1037,6 +1202,9 @@ function _user_memory(string $user_name)
     return $get_user_memory_closure($user_name);
 }/*}}}*/
 
+/**
+ * 用途: 从消息列表中提取指定用户的长期记忆。
+ */
 function _user_memory_extract(array $messages, string $user_name)
 {/*{{{*/
     $extract_user_memory_from_messages_closure = if_extract_user_memory_from_messages();
@@ -1049,6 +1217,9 @@ function _user_memory_extract(array $messages, string $user_name)
     return $extract_user_memory_from_messages_closure($messages, $user_name);
 }/*}}}*/
 
+/**
+ * 用途: 整理指定用户的长期记忆。
+ */
 function _user_memory_organize($memory, string $user_name)
 {/*{{{*/
     $organize_user_memory_closure = if_organize_user_memory();
@@ -1061,6 +1232,9 @@ function _user_memory_organize($memory, string $user_name)
     return $organize_user_memory_closure($memory, $user_name);
 }/*}}}*/
 
+/**
+ * 用途: 保存指定用户的长期记忆。
+ */
 function _user_memory_store($memory, string $user_name)
 {/*{{{*/
     $store_user_memory_closure = if_store_user_memory();
@@ -1073,21 +1247,33 @@ function _user_memory_store($memory, string $user_name)
     return $store_user_memory_closure($memory, $user_name);
 }/*}}}*/
 
+/**
+ * 用途: 对外读取指定用户长期记忆。
+ */
 function user_memory(string $user_name)
 {/*{{{*/
     return _user_memory($user_name);
 }/*}}}*/
 
+/**
+ * 用途: 对外从消息列表提取用户长期记忆。
+ */
 function user_memory_extract(array $messages, string $user_name)
 {/*{{{*/
     return _user_memory_extract($messages, $user_name);
 }/*}}}*/
 
+/**
+ * 用途: 对外整理用户长期记忆。
+ */
 function user_memory_organize($memory, string $user_name)
 {/*{{{*/
     return _user_memory_organize($memory, $user_name);
 }/*}}}*/
 
+/**
+ * 用途: 对外保存用户长期记忆。
+ */
 function user_memory_store($memory, string $user_name)
 {/*{{{*/
     return _user_memory_store($memory, $user_name);
@@ -1104,6 +1290,9 @@ function user_memory_store($memory, string $user_name)
 /**
  * 注册闭包调用参数: ($user_name)
  */
+/**
+ * 用途: 注册或获取读取用户已安装 skill 的回调。
+ */
 function if_get_installed_user_skills(closure $closure = null): ?closure
 {/*{{{*/
     static $container = null;
@@ -1117,6 +1306,9 @@ function if_get_installed_user_skills(closure $closure = null): ?closure
 
 /**
  * 注册闭包调用参数: ($user_name)
+ */
+/**
+ * 用途: 注册或获取读取已安装 skill 简要信息的回调。
  */
 function if_get_installed_user_skill_simple_infos(closure $closure = null): ?closure
 {/*{{{*/
@@ -1132,6 +1324,9 @@ function if_get_installed_user_skill_simple_infos(closure $closure = null): ?clo
 /**
  * 注册闭包调用参数: ($skill, $user_name)
  */
+/**
+ * 用途: 注册或获取登记已安装 skill 的回调。
+ */
 function if_register_installed_user_skill(closure $closure = null): ?closure
 {/*{{{*/
     static $container = null;
@@ -1143,6 +1338,9 @@ function if_register_installed_user_skill(closure $closure = null): ?closure
     return $container;
 }/*}}}*/
 
+/**
+ * 用途: 读取指定用户已安装 skill 的完整定义。
+ */
 function _installed_user_skills(string $user_name)
 {/*{{{*/
     $get_installed_user_skills_closure = if_get_installed_user_skills();
@@ -1155,6 +1353,9 @@ function _installed_user_skills(string $user_name)
     return $get_installed_user_skills_closure($user_name);
 }/*}}}*/
 
+/**
+ * 用途: 读取指定用户已安装 skill 的简要信息。
+ */
 function _installed_user_skill_simple_infos(string $user_name)
 {/*{{{*/
     $get_installed_user_skill_simple_infos_closure = if_get_installed_user_skill_simple_infos();
@@ -1167,6 +1368,9 @@ function _installed_user_skill_simple_infos(string $user_name)
     return $get_installed_user_skill_simple_infos_closure($user_name);
 }/*}}}*/
 
+/**
+ * 用途: 登记指定用户的已安装 skill。
+ */
 function _installed_user_skill_register($skill, string $user_name)
 {/*{{{*/
     $register_installed_user_skill_closure = if_register_installed_user_skill();
@@ -1179,16 +1383,25 @@ function _installed_user_skill_register($skill, string $user_name)
     return $register_installed_user_skill_closure($skill, $user_name);
 }/*}}}*/
 
+/**
+ * 用途: 对外读取指定用户已安装 skill。
+ */
 function installed_user_skills(string $user_name)
 {/*{{{*/
     return _installed_user_skills($user_name);
 }/*}}}*/
 
+/**
+ * 用途: 对外读取指定用户已安装 skill 简要信息。
+ */
 function installed_user_skill_simple_infos(string $user_name)
 {/*{{{*/
     return _installed_user_skill_simple_infos($user_name);
 }/*}}}*/
 
+/**
+ * 用途: 对外登记指定用户的已安装 skill。
+ */
 function installed_user_skill_register($skill, string $user_name)
 {/*{{{*/
     return _installed_user_skill_register($skill, $user_name);
@@ -1200,6 +1413,9 @@ function installed_user_skill_register($skill, string $user_name)
 
 /**
  * 注册闭包调用参数: ($user_name)
+ */
+/**
+ * 用途: 注册或获取读取用户沉淀 skill 的回调。
  */
 function if_get_refined_user_skills(closure $closure = null): ?closure
 {/*{{{*/
@@ -1215,6 +1431,9 @@ function if_get_refined_user_skills(closure $closure = null): ?closure
 /**
  * 注册闭包调用参数: ($user_name)
  */
+/**
+ * 用途: 注册或获取读取沉淀 skill 简要信息的回调。
+ */
 function if_get_refined_user_skill_simple_infos(closure $closure = null): ?closure
 {/*{{{*/
     static $container = null;
@@ -1228,6 +1447,9 @@ function if_get_refined_user_skill_simple_infos(closure $closure = null): ?closu
 
 /**
  * 注册闭包调用参数: ($skill, $user_name)
+ */
+/**
+ * 用途: 注册或获取登记沉淀 skill 的回调。
  */
 function if_register_refined_user_skill(closure $closure = null): ?closure
 {/*{{{*/
@@ -1243,6 +1465,9 @@ function if_register_refined_user_skill(closure $closure = null): ?closure
 /**
  * 注册闭包调用参数: ($messages, $user_name)
  */
+/**
+ * 用途: 注册或获取从会话中提取沉淀 skill 的回调。
+ */
 function if_extract_refined_user_skill(closure $closure = null): ?closure
 {/*{{{*/
     static $container = null;
@@ -1257,6 +1482,9 @@ function if_extract_refined_user_skill(closure $closure = null): ?closure
 /**
  * 注册闭包调用参数: ($skill, $user_name)
  */
+/**
+ * 用途: 注册或获取保存沉淀 skill 的回调。
+ */
 function if_store_refined_user_skill(closure $closure = null): ?closure
 {/*{{{*/
     static $container = null;
@@ -1268,6 +1496,9 @@ function if_store_refined_user_skill(closure $closure = null): ?closure
     return $container;
 }/*}}}*/
 
+/**
+ * 用途: 读取指定用户沉淀 skill 的完整定义。
+ */
 function _refined_user_skills(string $user_name)
 {/*{{{*/
     $get_refined_user_skills_closure = if_get_refined_user_skills();
@@ -1280,6 +1511,9 @@ function _refined_user_skills(string $user_name)
     return $get_refined_user_skills_closure($user_name);
 }/*}}}*/
 
+/**
+ * 用途: 读取指定用户沉淀 skill 的简要信息。
+ */
 function _refined_user_skill_simple_infos(string $user_name)
 {/*{{{*/
     $get_refined_user_skill_simple_infos_closure = if_get_refined_user_skill_simple_infos();
@@ -1292,6 +1526,9 @@ function _refined_user_skill_simple_infos(string $user_name)
     return $get_refined_user_skill_simple_infos_closure($user_name);
 }/*}}}*/
 
+/**
+ * 用途: 登记指定用户的沉淀 skill。
+ */
 function _refined_user_skill_register($skill, string $user_name)
 {/*{{{*/
     $register_refined_user_skill_closure = if_register_refined_user_skill();
@@ -1304,6 +1541,9 @@ function _refined_user_skill_register($skill, string $user_name)
     return $register_refined_user_skill_closure($skill, $user_name);
 }/*}}}*/
 
+/**
+ * 用途: 从消息列表中提取指定用户可沉淀的 skill。
+ */
 function _refined_user_skill_extract(array $messages, string $user_name)
 {/*{{{*/
     $extract_refined_user_skill_closure = if_extract_refined_user_skill();
@@ -1316,6 +1556,9 @@ function _refined_user_skill_extract(array $messages, string $user_name)
     return $extract_refined_user_skill_closure($messages, $user_name);
 }/*}}}*/
 
+/**
+ * 用途: 保存指定用户新沉淀的 skill。
+ */
 function _refined_user_skill_store($skill, string $user_name)
 {/*{{{*/
     $store_refined_user_skill_closure = if_store_refined_user_skill();
@@ -1328,26 +1571,41 @@ function _refined_user_skill_store($skill, string $user_name)
     return $store_refined_user_skill_closure($skill, $user_name);
 }/*}}}*/
 
+/**
+ * 用途: 对外读取指定用户沉淀 skill。
+ */
 function refined_user_skills(string $user_name)
 {/*{{{*/
     return _refined_user_skills($user_name);
 }/*}}}*/
 
+/**
+ * 用途: 对外读取指定用户沉淀 skill 简要信息。
+ */
 function refined_user_skill_simple_infos(string $user_name)
 {/*{{{*/
     return _refined_user_skill_simple_infos($user_name);
 }/*}}}*/
 
+/**
+ * 用途: 对外登记指定用户沉淀 skill。
+ */
 function refined_user_skill_register($skill, string $user_name)
 {/*{{{*/
     return _refined_user_skill_register($skill, $user_name);
 }/*}}}*/
 
+/**
+ * 用途: 对外从消息列表提取用户沉淀 skill。
+ */
 function refined_user_skill_extract(array $messages, string $user_name)
 {/*{{{*/
     return _refined_user_skill_extract($messages, $user_name);
 }/*}}}*/
 
+/**
+ * 用途: 对外保存用户沉淀 skill。
+ */
 function refined_user_skill_store($skill, string $user_name)
 {/*{{{*/
     return _refined_user_skill_store($skill, $user_name);
@@ -1359,6 +1617,9 @@ function refined_user_skill_store($skill, string $user_name)
 
 /**
  * 注册闭包调用参数: ($user_name)
+ */
+/**
+ * 用途: 注册或获取读取 agent 自定义定义的回调。
  */
 function if_get_agent_definition(closure $closure = null): ?closure
 {/*{{{*/
@@ -1381,6 +1642,9 @@ function if_get_agent_definition(closure $closure = null): ?closure
  *     'history_session_messages' => ...,
  * ])
  */
+/**
+ * 用途: 注册或获取为当前上下文选择 active skills 的回调。
+ */
 function if_pick_agent_skills(closure $closure = null): ?closure
 {/*{{{*/
     static $container = null;
@@ -1395,6 +1659,9 @@ function if_pick_agent_skills(closure $closure = null): ?closure
 /**
  * 注册闭包调用参数:
  * ($agent_definition, $agent_frame_definition, $user_name, $memory, $registered_tool_simple_infos, $installed_skill_simple_infos, $refined_skill_simple_infos, $active_skill_infos)
+ */
+/**
+ * 用途: 注册或获取构建 agent system message 的回调。
  */
 function if_build_agent_system_message(closure $closure = null): ?closure
 {/*{{{*/
@@ -1414,6 +1681,9 @@ function if_build_agent_system_message(closure $closure = null): ?closure
  *     'registered_tool_infos' => ...,
  * ])
  */
+/**
+ * 用途: 注册或获取判断上下文是否接近限制的回调。
+ */
 function if_agent_context_near_limit(closure $closure = null): ?closure
 {/*{{{*/
     static $container = null;
@@ -1428,6 +1698,9 @@ function if_agent_context_near_limit(closure $closure = null): ?closure
 /**
  * 注册闭包调用参数: ($llm_user_message)
  */
+/**
+ * 用途: 注册或获取为当前用户消息选择可用工具的回调。
+ */
 function if_pick_agent_tools(closure $closure = null): ?closure
 {/*{{{*/
     static $container = null;
@@ -1439,6 +1712,9 @@ function if_pick_agent_tools(closure $closure = null): ?closure
     return $container;
 }/*}}}*/
 
+/**
+ * 用途: 读取指定用户对应的 agent 定义。
+ */
 function _agent_definition(string $user_name)
 {/*{{{*/
     $get_agent_definition_closure = if_get_agent_definition();
@@ -1451,6 +1727,9 @@ function _agent_definition(string $user_name)
     return $get_agent_definition_closure($user_name);
 }/*}}}*/
 
+/**
+ * 用途: 从 LLM user message 中提取用户身份。
+ */
 function _agent_user_name($llm_user_message)
 {/*{{{*/
     if (is_array($llm_user_message)) {
@@ -1460,6 +1739,9 @@ function _agent_user_name($llm_user_message)
     return null;
 }/*}}}*/
 
+/**
+ * 用途: 推进一轮 agent 对话，处理模型回复、工具调用、记忆和 skill 沉淀。
+ */
 function agent_push($llm_user_message)
 {/*{{{*/
     $pick_agent_skills_closure = if_pick_agent_skills();
@@ -1498,11 +1780,12 @@ function agent_push($llm_user_message)
     $agent_definition = _agent_definition($user_name);
 
     $agent_frame_definition = "
-        你是运行在 agent 框架中的 assistant。
-        当你返回给用户可见的回复时，assistant message 的 content 必须是一个合法 JSON 字符串。
+        当你返回给用户可见的回复时，assistant message 的 content 必须且只能是一个合法 JSON 字符串。
+        不要输出 markdown，不要输出 JSON 代码块，不要在 JSON 前后输出任何额外文本。
         这个 JSON 至少必须包含两个字段: content, task_state。
         content 字段用于放给用户看的文本内容。
-        task_state 字段只能是 continue、finished、need_user_input 三个值之一。
+        task_state 字段用于说明这次回复是否完成了任务，只能是 continue、finished、need_user_input 三个值之一，分别含义是未完成要继续、完成了、需要用户再补充信息。
+        示例 content: {\"content\":\"你好，我可以帮你。\",\"task_state\":\"finished\"}
         如果当前轮需要调用 tool，请优先按原生 tool_calls 协议返回，不要把 tool 调用信息写入 content JSON。
         如果当前轮没有 tool_calls，则 content 必须严格满足上述 JSON 结构要求。";
 
@@ -1512,6 +1795,8 @@ function agent_push($llm_user_message)
     $refined_skill_definitions = _refined_user_skills($user_name);
     $refined_skill_simple_infos = _refined_user_skill_simple_infos($user_name);
     $history_session_messages = _user_session_append_message($user_name, $llm_user_message);
+    $response_format_retry_count = 0;
+    $max_response_format_retry_count = 2;
 
     for (;;) {
         try {
@@ -1569,11 +1854,10 @@ function agent_push($llm_user_message)
             $response = llm_chat($llm_messages, $registered_tool_infos);
             $assistant_message = llm_pick_response_message($response);
 
-            $history_session_messages = _user_session_append_message($user_name, $assistant_message);
-
             $tool_calls = llm_if_need_tool_calls($assistant_message);
             if (not_empty($tool_calls)) {
-                $tool_result_messages = _agent_message_tool_calls($assistant_message);
+                $history_session_messages = _user_session_append_message($user_name, $assistant_message);
+                $tool_result_messages = _agent_tool_calls($tool_calls, $user_name);
 
                 foreach ($tool_result_messages as $tool_result_message) {
                     $history_session_messages = _user_session_append_message($user_name, $tool_result_message);
@@ -1582,6 +1866,30 @@ function agent_push($llm_user_message)
                 continue;
             }
 
+            $response_format_error = _agent_message_response_format_error($assistant_message);
+            if (not_empty($response_format_error)) {
+                otherwise(
+                    $response_format_retry_count < $max_response_format_retry_count,
+                    'assistant message content 连续不满足 JSON 协议: '.$response_format_error
+                );
+
+                $response_format_retry_count++;
+                $history_session_messages = _user_session_append_message(
+                    $user_name,
+                    llm_user_message(
+                        "上一条 assistant message content 不符合 agent 框架协议，错误: $response_format_error\n".
+                        "请重新回答上一轮用户问题。必须只返回一个合法 JSON 字符串，不要输出 markdown，不要输出 JSON 代码块，不要在 JSON 前后输出任何额外文本。\n".
+                        "JSON 格式: {\"content\":\"给用户看的文本\",\"task_state\":\"finished\"}",
+                        $user_name
+                    )
+                );
+
+                continue;
+            }
+
+            $response_format_retry_count = 0;
+            $history_session_messages = _user_session_append_message($user_name, $assistant_message);
+
             if (not_empty($assistant_message['content'] ?? null)) {
                 _agent_stage_response_message($assistant_message);
             }
@@ -1589,9 +1897,11 @@ function agent_push($llm_user_message)
             $task_state = _agent_message_task_state($assistant_message);
 
             if (in_array($task_state, ['finished', 'need_user_input'], true)) {
-                $memory = _user_memory_extract($history_session_messages, $user_name);
-                $memory = _user_memory_organize($memory, $user_name);
-                _user_memory_store($memory, $user_name);
+                $new_memory = _user_memory_extract($history_session_messages, $user_name);
+                if ($new_memory) {
+                    $memory = _user_memory_organize($new_memory, $user_name);
+                    _user_memory_store($memory, $user_name);
+                }
 
                 $refined_skill_definition = _refined_user_skill_extract($history_session_messages, $user_name);
                 if (not_empty($refined_skill_definition)) {
