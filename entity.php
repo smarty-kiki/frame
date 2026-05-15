@@ -161,6 +161,24 @@ abstract class entity implements JsonSerializable, Serializable
         }
     }
 
+    public function __serialize(): array
+    {
+        $serializable = get_object_vars($this);
+
+        unset($serializable['relationships']);
+
+        return $serializable;
+    }
+
+    public function __unserialize(array $data): void
+    {
+        foreach ($data as $property => $value) {
+
+            $this->{$property} = $value;
+
+        }
+    }
+
     public function __get($property)
     {
         $method = "get_$property";
